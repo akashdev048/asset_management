@@ -11,7 +11,8 @@ import minusIcon from '../../assets/images/minus-btn-icon.svg';
 import bellIcon from '../../assets/images/bell-icon.svg';
 import toggleMenuIcon from '../../assets/images/toggle-menu-icon.svg';
 import exclamationIcon from '../../assets/images/exclamation-icon.svg';
-import { getDeals, getEquipmentNumbers, getBasins, getEqipment, saveEqipment, getHose, saveHose, getCustomPackage, saveCustomPackageItems, getHSE, saveHSE } from "../../Services/dashboard";
+import { getDeals, getEquipmentNumbers, getBasins, getEqipment, saveEqipment, getHose, saveHose, 
+    getCustomPackage, saveCustomPackageItems, getHSE, saveHSE,getLabItems,saveLabItems } from "../../Services/dashboard";
 import FullScreenLoader from "../../Component/Loader";
 import Header from "../../Component/Header";
 
@@ -120,12 +121,22 @@ function Home() {
         },
     ]);
 
+    const [labItems, setLabItems] = useState([
+  {
+    ID: 0,
+    LabItemsID: 0,
+    itemName: "",
+    quantity: null,
+    suppliedBy: "",
+  },
+]);
+
     useEffect(() => {
         fetchDealById(383)
         fetchHose(3);
         fetchCustomPackage(3); // new
         fetchHSEItems(3);
-
+        fetchLabItems(3)
         // fetchRsNumber('RA')
         // fetchBasins()
     }, []);
@@ -242,7 +253,29 @@ function Home() {
             setShowLoader(false);
         }
     };
+const fetchLabItems = async (job_id) => {
+  setShowLoader(true);
+  try {
+    const res = await getLabItems(localStorage?.access_token, job_id);
+    setShowLoader(false);
 
+    if (res.status === 200 && res.data?.status_code === 200) {
+      const formatted = res.data.result.map((item, index) => ({
+        index,
+        ID: item.ID ?? null,
+        LabItemsID: item.LabItemsID ?? null,
+        itemName: item.ItemName ?? "",
+        quantity: item.Quantity ?? null,
+        suppliedBy: item.SuppliedBy ?? "",
+      }));
+
+      setLabItems(formatted);
+    }
+  } catch (error) {
+    console.error("Error fetching lab items:", error);
+    setShowLoader(false);
+  }
+};
 
 
 
@@ -525,9 +558,40 @@ function Home() {
             }
         }
 
-        else if (activeTab == 'lap') {
-            //// save lap api call
-        }
+ else if (activeTab === "lap") {
+  const filteredItems = labItems.filter(
+    (item) => item.quantity || item.suppliedBy
+  );
+
+  const payload = {
+    job_id: 3, // make sure this variable is defined
+    items: filteredItems.map((item) => ({
+      ID: item.ID ?? 0,
+      Lab_Items_ID: item.LabItemsID ?? 0,
+      Requested_Quantity: item.quantity ?? 0,
+      Supplied_By: item.suppliedBy ?? "",
+    //   Size: "", // optional, if applicable
+    })),
+  };
+
+  console.log("Saving lab items payload:", payload);
+
+  try {
+    setShowLoader(true);
+    const res = await saveLabItems(localStorage?.access_token, payload);
+    setShowLoader(false);
+
+    if (res.status === 200 && res.data?.status_code === 200) {
+      toast.success(res.data?.result?.message || "Lab items saved successfully!");
+    } else {
+      toast.error("Failed to save lab items ❌");
+    }
+  } catch (error) {
+    setShowLoader(false);
+    console.error("Error saving lab items:", error);
+    toast.error("Something went wrong while saving lab items.");
+  }
+}
         else if (activeTab === 'hse') {
             // 1️⃣ Build and filter payload
             const filteredItems = hseItems
@@ -1690,181 +1754,51 @@ function Home() {
                                                             activeTab === 'lap' ?
                                                                 <>
                                                                     <Table responsive className="table-more-asts striped-table">
-                                                                        <thead className="thead-itms-wp space-table-head">
-                                                                            <tr>
-                                                                                <th>Item Name</th>
-                                                                                <th>Quantity <span className="small-th-head">(Requested)</span></th>
-                                                                                <th>Supplied By</th>
-                                                                            </tr>
-                                                                        </thead>
-                                                                        <tbody>
-                                                                            <tr>
-                                                                                <td>
-                                                                                    <span className="txt-conten-pargrap">Any Chemical Kit/Sample</span>
-                                                                                </td>
-                                                                                <td>
-                                                                                    <div className="form-group-col">
-                                                                                        <Form.Control type="number" className="input-tb-txt" placeholder="" />
-                                                                                    </div>
-                                                                                </td>
-                                                                                <td>
-                                                                                    <div className="form-group-col">
-                                                                                        <Form.Control type="text" className="input-tb-txt" placeholder="" />
-                                                                                    </div>
-                                                                                </td>
-                                                                            </tr>
-                                                                            <tr>
-                                                                                <td>
-                                                                                    <span className="txt-conten-pargrap">Any Coagulant Kit/Sample</span>
-                                                                                </td>
-                                                                                <td>
-                                                                                    <div className="form-group-col">
-                                                                                        <Form.Control type="number" className="input-tb-txt" placeholder="" />
-                                                                                    </div>
-                                                                                </td>
-                                                                                <td>
-                                                                                    <div className="form-group-col">
-                                                                                        <Form.Control type="text" className="input-tb-txt" placeholder="" />
-                                                                                    </div>
-                                                                                </td>
-                                                                            </tr>
-                                                                            <tr>
-                                                                                <td>
-                                                                                    <span className="txt-conten-pargrap">Any Polymer Kit/Sample</span>
-                                                                                </td>
-                                                                                <td>
-                                                                                    <div className="form-group-col">
-                                                                                        <Form.Control type="number" className="input-tb-txt" placeholder="" />
-                                                                                    </div>
-                                                                                </td>
-                                                                                <td>
-                                                                                    <div className="form-group-col">
-                                                                                        <Form.Control type="text" className="input-tb-txt" placeholder="" />
-                                                                                    </div>
-                                                                                </td>
-                                                                            </tr>
-                                                                            <tr>
-                                                                                <td>
-                                                                                    <span className="txt-conten-pargrap">Beakers (Various Sizes)</span>
-                                                                                </td>
-                                                                                <td>
-                                                                                    <div className="form-group-col">
-                                                                                        <Form.Control type="number" className="input-tb-txt" placeholder="" />
-                                                                                    </div>
-                                                                                </td>
-                                                                                <td>
-                                                                                    <div className="form-group-col">
-                                                                                        <Form.Control type="text" className="input-tb-txt" placeholder="" />
-                                                                                    </div>
-                                                                                </td>
-                                                                            </tr>
-                                                                            <tr>
-                                                                                <td>
-                                                                                    <span className="txt-conten-pargrap">BS&W Test Kit</span>
-                                                                                </td>
-                                                                                <td>
-                                                                                    <div className="form-group-col">
-                                                                                        <Form.Control type="number" className="input-tb-txt" placeholder="" />
-                                                                                    </div>
-                                                                                </td>
-                                                                                <td>
-                                                                                    <div className="form-group-col">
-                                                                                        <Form.Control type="text" className="input-tb-txt" placeholder="" />
-                                                                                    </div>
-                                                                                </td>
-                                                                            </tr>
-                                                                            <tr>
-                                                                                <td>
-                                                                                    <span className="txt-conten-pargrap">Centrifuge Test Tubes</span>
-                                                                                </td>
-                                                                                <td>
-                                                                                    <div className="form-group-col">
-                                                                                        <Form.Control type="number" className="input-tb-txt" placeholder="" />
-                                                                                    </div>
-                                                                                </td>
-                                                                                <td>
-                                                                                    <div className="form-group-col">
-                                                                                        <Form.Control type="text" className="input-tb-txt" placeholder="" />
-                                                                                    </div>
-                                                                                </td>
-                                                                            </tr>
-                                                                            <tr>
-                                                                                <td>
-                                                                                    <span className="txt-conten-pargrap">Digital Scale</span>
-                                                                                </td>
-                                                                                <td>
-                                                                                    <div className="form-group-col">
-                                                                                        <Form.Control type="number" className="input-tb-txt" placeholder="" />
-                                                                                    </div>
-                                                                                </td>
-                                                                                <td>
-                                                                                    <div className="form-group-col">
-                                                                                        <Form.Control type="text" className="input-tb-txt" placeholder="" />
-                                                                                    </div>
-                                                                                </td>
-                                                                            </tr>
-                                                                            <tr>
-                                                                                <td>
-                                                                                    <span className="txt-conten-pargrap">Hardness Meter</span>
-                                                                                </td>
-                                                                                <td>
-                                                                                    <div className="form-group-col">
-                                                                                        <Form.Control type="number" className="input-tb-txt" placeholder="" />
-                                                                                    </div>
-                                                                                </td>
-                                                                                <td>
-                                                                                    <div className="form-group-col">
-                                                                                        <Form.Control type="text" className="input-tb-txt" placeholder="" />
-                                                                                    </div>
-                                                                                </td>
-                                                                            </tr>
-                                                                            <tr>
-                                                                                <td>
-                                                                                    <span className="txt-conten-pargrap">Hardness Strips/Hardness Testing Kit</span>
-                                                                                </td>
-                                                                                <td>
-                                                                                    <div className="form-group-col">
-                                                                                        <Form.Control type="number" className="input-tb-txt" placeholder="" />
-                                                                                    </div>
-                                                                                </td>
-                                                                                <td>
-                                                                                    <div className="form-group-col">
-                                                                                        <Form.Control type="text" className="input-tb-txt" placeholder="" />
-                                                                                    </div>
-                                                                                </td>
-                                                                            </tr>
-                                                                            <tr>
-                                                                                <td>
-                                                                                    <span className="txt-conten-pargrap">Infrared Handheld Thermometer</span>
-                                                                                </td>
-                                                                                <td>
-                                                                                    <div className="form-group-col">
-                                                                                        <Form.Control type="number" className="input-tb-txt" placeholder="" />
-                                                                                    </div>
-                                                                                </td>
-                                                                                <td>
-                                                                                    <div className="form-group-col">
-                                                                                        <Form.Control type="text" className="input-tb-txt" placeholder="" />
-                                                                                    </div>
-                                                                                </td>
-                                                                            </tr>
-                                                                            <tr>
-                                                                                <td>
-                                                                                    <span className="txt-conten-pargrap">Magnetic Mixers</span>
-                                                                                </td>
-                                                                                <td>
-                                                                                    <div className="form-group-col">
-                                                                                        <Form.Control type="number" className="input-tb-txt" placeholder="" />
-                                                                                    </div>
-                                                                                </td>
-                                                                                <td>
-                                                                                    <div className="form-group-col">
-                                                                                        <Form.Control type="text" className="input-tb-txt" placeholder="" />
-                                                                                    </div>
-                                                                                </td>
-                                                                            </tr>
-                                                                        </tbody>
-                                                                    </Table>
+  <thead>
+    <tr>
+      <th>Item Name</th>
+      <th>Quantity (Requested)</th>
+      <th>Supplied By</th>
+    </tr>
+  </thead>
+  <tbody>
+    {labItems.map((item, index) => (
+      <tr key={index}>
+        <td>{item.itemName}</td>
+        <td>
+          <Form.Control
+            type="number"
+            className="input-tb-txt"
+            value={item.quantity || ""}
+            onChange={(e) =>
+              setLabItems((prev) =>
+                prev.map((itm, i) =>
+                  i === index
+                    ? { ...itm, quantity: Number(e.target.value) || null }
+                    : itm
+                )
+              )
+            }
+          />
+        </td>
+        <td>
+          <Form.Control
+            type="text"
+            className="input-tb-txt"
+            value={item.suppliedBy || ""}
+            onChange={(e) =>
+              setLabItems((prev) =>
+                prev.map((itm, i) =>
+                  i === index ? { ...itm, suppliedBy: e.target.value } : itm
+                )
+              )
+            }
+          />
+        </td>
+      </tr>
+    ))}
+  </tbody>
+</Table>
                                                                     <div className="total-qty-footer">
                                                                         <div className="total-ft-wth">
                                                                             <span class="txt-label-ttl">Total QTY <span className="d-inline-block ms-3"></span>5</span>
