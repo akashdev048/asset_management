@@ -59,18 +59,10 @@ function Home() {
                             {
                                 value: null, label: "", BCR_ID: null
                             }
-                        ]
+                        ],
+                        AssetCount: 0
                     },
-                    {
-                        SuppliedBy: {
-                            value: "", label: ""
-                        },
-                        AssetDetails: [
-                            {
-                                value: null, label: "", BCR_ID: null
-                            }
-                        ]
-                    }
+
                 ],
                 notes: ''
             }
@@ -131,6 +123,66 @@ function Home() {
     }, []);
 
 
+    useEffect(() => {
+        if (!equipments?.length) return;
+
+        const updatedEquipments = equipments.map((equipment) => {
+            // 1️⃣ Supplied Quantity check
+            if (!equipment?.SuppliedQuantity) return equipment;
+
+            const assets = equipment.Assets || [];
+
+            // 2️⃣ Total count of selected asset numbers
+            const totalSelectedCount = assets.reduce(
+                (sum, asset) => sum + (asset?.AssetCount || 0),
+                0
+            );
+
+            const suppliedQty = Number(equipment.SuppliedQuantity) || 0;
+
+            let updatedAssets = [...assets];
+
+            // 3️⃣ ADD a new blank row (if needed)
+            if (totalSelectedCount < suppliedQty) {
+                const lastAsset = assets[assets.length - 1];
+                if (lastAsset?.SuppliedBy) {
+                    updatedAssets.push({
+                        SuppliedBy: null,
+                        AssetDetails: [],
+                    });
+                }
+            }
+
+            // 4️⃣ REMOVE extra rows (if suppliedQty decreased)
+            if (totalSelectedCount > suppliedQty) {
+                // Remove trailing empty assets (those with no SuppliedBy or AssetDetails)
+                while (
+                    updatedAssets.length &&
+                    totalSelectedCount > suppliedQty &&
+                    !updatedAssets[updatedAssets.length - 1]?.SuppliedBy &&
+                    !updatedAssets[updatedAssets.length - 1]?.AssetDetails?.length
+                ) {
+                    updatedAssets.pop();
+                }
+            }
+
+            return {
+                ...equipment,
+                Assets: updatedAssets,
+            };
+        });
+
+        // 5️⃣ Update state only if there’s an actual difference
+        setEquipments((prev) => {
+            const isChanged = JSON.stringify(prev) !== JSON.stringify(updatedEquipments);
+            return isChanged ? updatedEquipments : prev;
+        });
+    }, [equipments, raNumbers]);
+
+
+
+
+
     let fetchDealById = async (deal_id) => {
         setShowLoader(true)
         let res = await getDeals(localStorage?.access_token, deal_id)
@@ -144,25 +196,31 @@ function Home() {
     }
 
     let fetchEqipment = async (equipment_id) => {
+        setShowLoader(true)
         let res = await getEqipment(localStorage?.access_token, equipment_id)
         setShowLoader(false)
         if (res.status == 200) {
             if (res.data?.status_code == 200) {
-                const output = res?.data?.result.map(item => ({
+                const output = res?.data?.result?.result?.map(item => ({
                     equipment_id: item.EquipmentID ?? 0,
                     AssetType: item.AssetType ?? '',
                     SalesQuantity: item.SalesQuantity ?? null,
                     OperationQuantity: item.OperationQuantity ?? null,
                     SuppliedQuantity: item.SuppliedQuantity ?? null,
                     Assets: item?.Assets.length ?
-                        item?.Assets.map(asset => ({
-                            SuppliedBy: { value: asset.SuppliedBy, label: asset.SuppliedBy },
-                            AssetDetails: asset.AssetDetails.map(detail => ({
-                                value: detail.AssetID,
-                                label: detail.AssetNo,
-                                BCR_ID: detail.BCR_ID
-                            }))
-                        })) : [],
+                        item?.Assets.map(asset => (
+                            {
+                                SuppliedBy: { value: asset.SuppliedBy, label: asset.SuppliedBy },
+                                AssetCount: asset?.AssetCount,
+                                AssetDetails: asset.AssetDetails.map(detail => ({
+                                    value: detail.AssetID,
+                                    label: detail.AssetNo,
+                                    BCR_ID: detail.BCR_ID
+                                }))
+
+                            }
+
+                        )) : [],
 
                     Notes: item.Notes ?? ''
                 }));
@@ -246,20 +304,42 @@ function Home() {
 
 
 
-    let fetchRsNumber = async (RsNumber, basin) => {
-        setIsBasinLoading(true)
-        let res = await getEquipmentNumbers(localStorage?.access_token, RsNumber, basin)
-        setIsBasinLoading(false)
-        if (res.status == 200) {
-            if (res.data?.status_code == 200) {
-                const output = res?.data?.result?.data?.map(item => ({
-                    value: item.ID,
-                    label: item.AssetName
-                }));
-                setRaNumbers(output)
-            }
+    let fetchRsNumber = async (RsNumber, basin, equipmentIndex, assetIndex) => {
+        setIsBasinLoading(true);
+        let res = await getEquipmentNumbers(localStorage?.access_token, RsNumber, basin);
+        setIsBasinLoading(false);
+
+        if (res.status === 200 && res.data?.status_code === 200) {
+            const output = res?.data?.result?.data?.map(item => ({
+                value: item.ID,
+                label: item.AssetName
+            }));
+
+            const count = res?.data?.result?.count || 0;
+            setRaNumbers(output);
+            setEquipments(prevEquipments => {
+                const updatedEquipments = [...prevEquipments];
+                const targetEquipment = { ...updatedEquipments[equipmentIndex] };
+
+                // Ensure Assets array exists
+                const updatedAssets = [...(targetEquipment.Assets || [])];
+                const targetAsset = { ...updatedAssets[assetIndex] };
+
+                // Update AssetCount
+                targetAsset.AssetCount = count;
+
+                // Put updated asset back
+                updatedAssets[assetIndex] = targetAsset;
+                targetEquipment.Assets = updatedAssets;
+
+                // Put updated equipment back
+                updatedEquipments[equipmentIndex] = targetEquipment;
+
+                return updatedEquipments;
+            });
         }
-    }
+    };
+
 
     let fetchBasins = async (assetType) => {
         setIsBasinLoading(true)
@@ -287,7 +367,20 @@ function Home() {
                 salesQuantity: '',
                 operationQuantity: null,
                 suppliedQuantity: null,
-                assetDetails: [],
+                Assets: [
+                    {
+                        SuppliedBy: {
+                            value: "", label: ""
+                        },
+                        AssetDetails: [
+                            {
+                                value: null, label: "", BCR_ID: null
+                            }
+                        ],
+                        AssetCount: 0
+                    },
+
+                ],
                 notes: ''
             }
             temp.push(obj)
@@ -407,7 +500,12 @@ function Home() {
             temp[index].Assets[fieldName].SuppliedBy = selectedOption
             setEquipments(temp)
         }
+    }
 
+    let handleSuppliedEquipment = (selectedOption, equipmentIndex, assetIndex, fieldName) => {
+        let temp = [...equipments];
+        temp[equipmentIndex][fieldName] = selectedOption;
+        setEquipments(temp);
     }
 
     let handleDealsChange = (e) => {
@@ -444,7 +542,13 @@ function Home() {
             }
             setShowLoader(true)
             let res = await saveEqipment(localStorage.access_token, payload)
-            console.log("res ->", res)
+            if (res.status === 200 && res.data?.status_code === 200) {
+                // ✅ Success toast
+                toast.success(res.data?.result.message || "Equipment details saved successfully!");
+            } else {
+                // ⚠️ Failure toast
+                toast.error("Failed to save equipment details ❌");
+            }
             setShowLoader(false)
         }
         else if (activeTab === 'house') {
@@ -503,7 +607,6 @@ function Home() {
                 })),
             };
 
-            console.log("Saving custom package payload:", payload);
 
             // 2️⃣ Call API
             try {
@@ -787,197 +890,96 @@ function Home() {
                                                                             </td>
                                                                             <td className="px-0">
                                                                                 {
-                                                                                    val?.Assets?.length ?
-                                                                                        <>
-                                                                                            {
-                                                                                                val?.Assets.map((ele, i) => {
-                                                                                                    return (
-                                                                                                        <>
-                                                                                                            <div className="d-flex less-margin-8" key={i}>
-                                                                                                                <div className="form-group-col select-supp-left">
-                                                                                                                    <Select
-                                                                                                                        classNamePrefix="react-select"
-                                                                                                                        className="single-select-optn"
-                                                                                                                        options={
-                                                                                                                            isBasinLoading
-                                                                                                                                ? [{ label: "Loading...", value: "", isDisabled: true }]
-                                                                                                                                : basins
-                                                                                                                        }
-                                                                                                                        // options={basins}
-                                                                                                                        isClearable={true}
-                                                                                                                        defaultInputValue={ele?.SuppliedBy?.value}
-                                                                                                                        onMenuOpen={() => {
-                                                                                                                            fetchBasins(val?.AssetType);
 
-                                                                                                                        }}
-                                                                                                                        placeholder={"Select"}
-                                                                                                                        onChange={(selectedOption) => handleSelectChange('suppliedBy', selectedOption, index, i)}
-                                                                                                                        isSearchable={true}
-                                                                                                                        menuPortalTarget={document.body}
-                                                                                                                        menuPosition="fixed"
-                                                                                                                        styles={{
-                                                                                                                            control: (base) => ({
-                                                                                                                                ...base,
-                                                                                                                                borderRadius: "8px",
-                                                                                                                                borderColor: "#ccc",
-                                                                                                                                minHeight: "38px",
-                                                                                                                            }),
-                                                                                                                            menu: (base) => ({
-                                                                                                                                ...base,
-                                                                                                                                zIndex: 9999,
-                                                                                                                            }),
-                                                                                                                        }}
-                                                                                                                    />
-                                                                                                                </div>
+                                                                                    <>
+                                                                                        {
+                                                                                            val?.Assets.map((ele, i) => {
+                                                                                                return (
+                                                                                                    <>
+                                                                                                        <div className="d-flex less-margin-8" key={i}>
+                                                                                                            <div className="form-group-col select-supp-left">
+                                                                                                                <Select
+                                                                                                                    classNamePrefix="react-select"
+                                                                                                                    className="single-select-optn"
+                                                                                                                    options={
+                                                                                                                        isBasinLoading
+                                                                                                                            ? [{ label: "Loading...", value: "", isDisabled: true }]
+                                                                                                                            : basins
+                                                                                                                    }
+                                                                                                                    // options={basins}
+                                                                                                                    isClearable={true}
+                                                                                                                    defaultInputValue={ele?.SuppliedBy?.value}
+                                                                                                                    onMenuOpen={() => {
+                                                                                                                        fetchBasins(val?.AssetType);
 
-                                                                                                                <div className="form-group-col select-supp-right">
-                                                                                                                    <Select
-                                                                                                                        classNamePrefix="react-select"
-                                                                                                                        isMulti
-                                                                                                                        //options={raNumbers}
-                                                                                                                        options={
-                                                                                                                            isBasinLoading
-                                                                                                                                ? [{ label: "Loading...", value: "", isDisabled: true }]
-                                                                                                                                : raNumbers
-                                                                                                                        }
-                                                                                                                        value={val.assetNumberByBasin}
-                                                                                                                        onChange={(selectedOption) => handleSelectChange('assetNumberByBasin', selectedOption, index, 'assetNumberByBasin')}
-                                                                                                                        onMenuOpen={() => {
-                                                                                                                            fetchRsNumber(val?.AssetType, ele.SuppliedBy?.value);
-                                                                                                                        }}
-                                                                                                                        placeholder="Select"
-                                                                                                                        isSearchable={true}
-                                                                                                                        menuPortalTarget={document.body}
-                                                                                                                        menuPosition="fixed"
-                                                                                                                        styles={{
-                                                                                                                            control: (base) => ({
-                                                                                                                                ...base,
-                                                                                                                                borderRadius: "8px",
-                                                                                                                                borderColor: "#ccc",
-                                                                                                                                minHeight: "38px",
-                                                                                                                            }),
-                                                                                                                            menu: (base) => ({
-                                                                                                                                ...base,
-                                                                                                                                zIndex: 9999,
-                                                                                                                            }),
-                                                                                                                        }}
-                                                                                                                    />
-                                                                                                                </div>
+                                                                                                                    }}
+                                                                                                                    placeholder={"Select"}
+                                                                                                                    onChange={(selectedOption) => handleSuppliedEquipment(selectedOption, index, i, 'suppliedBy')}
+                                                                                                                    isSearchable={true}
+                                                                                                                    menuPortalTarget={document.body}
+                                                                                                                    menuPosition="fixed"
+                                                                                                                    styles={{
+                                                                                                                        control: (base) => ({
+                                                                                                                            ...base,
+                                                                                                                            borderRadius: "8px",
+                                                                                                                            borderColor: "#ccc",
+                                                                                                                            minHeight: "38px",
+                                                                                                                        }),
+                                                                                                                        menu: (base) => ({
+                                                                                                                            ...base,
+                                                                                                                            zIndex: 9999,
+                                                                                                                        }),
+                                                                                                                    }}
+                                                                                                                />
                                                                                                             </div>
-                                                                                                        </>
-                                                                                                    )
-                                                                                                })
-                                                                                            }
 
-                                                                                        </>
-                                                                                        :
-                                                                                        <>
-                                                                                            <div className="d-flex">
-                                                                                                <div className="form-group-col select-supp-left">
-                                                                                                    <Select
-                                                                                                        classNamePrefix="react-select"
-                                                                                                        className="single-select-optn"
-                                                                                                        options={basins}
-                                                                                                        value={val.suppliedBy}
-                                                                                                        onChange={(selectedOption) => handleSelectChange('equipment', selectedOption, index, 'suppliedBy')}
-                                                                                                        placeholder="Select"
-                                                                                                        isSearchable={true}
-                                                                                                        menuPortalTarget={document.body}
-                                                                                                        menuPosition="fixed"
-                                                                                                        styles={{
-                                                                                                            control: (base) => ({
-                                                                                                                ...base,
-                                                                                                                borderRadius: "8px",
-                                                                                                                borderColor: "#ccc",
-                                                                                                                minHeight: "38px",
-                                                                                                            }),
-                                                                                                            menu: (base) => ({
-                                                                                                                ...base,
-                                                                                                                zIndex: 9999,
-                                                                                                            }),
-                                                                                                        }}
-                                                                                                    />
-                                                                                                </div>
+                                                                                                            <div className="form-group-col select-supp-right">
+                                                                                                                <Select
+                                                                                                                    classNamePrefix="react-select"
+                                                                                                                    isMulti
+                                                                                                                    options={
+                                                                                                                        isBasinLoading
+                                                                                                                            ? [{ label: "Loading...", value: "", isDisabled: true }]
+                                                                                                                            : raNumbers
+                                                                                                                    }
+                                                                                                                    defaultValue={
+                                                                                                                        (ele?.AssetDetails || []).filter(
+                                                                                                                            (item) => item?.value && item?.label
+                                                                                                                        )
+                                                                                                                    }
+                                                                                                                    onChange={(selectedOption) =>
+                                                                                                                        handleSelectChange('assetNumberByBasin', selectedOption, index, 'assetNumberByBasin')
+                                                                                                                    }
+                                                                                                                    onMenuOpen={() => {
+                                                                                                                        fetchRsNumber(val?.AssetType, ele.SuppliedBy?.value, index, i);
+                                                                                                                    }}
+                                                                                                                    placeholder="Select"
+                                                                                                                    isSearchable
+                                                                                                                    menuPortalTarget={document.body}
+                                                                                                                    menuPosition="fixed"
+                                                                                                                    styles={{
+                                                                                                                        control: (base) => ({
+                                                                                                                            ...base,
+                                                                                                                            borderRadius: "8px",
+                                                                                                                            borderColor: "#ccc",
+                                                                                                                            minHeight: "38px",
+                                                                                                                        }),
+                                                                                                                        menu: (base) => ({
+                                                                                                                            ...base,
+                                                                                                                            zIndex: 9999,
+                                                                                                                        }),
+                                                                                                                    }}
+                                                                                                                />
+                                                                                                            </div>
+                                                                                                        </div>
+                                                                                                    </>
+                                                                                                )
+                                                                                            })
+                                                                                        }
 
-                                                                                                <div className="form-group-col select-supp-right">
-                                                                                                    <Select
-                                                                                                        classNamePrefix="react-select"
-                                                                                                        options={raNumbers}
-                                                                                                        value={val.assetNumberByBasin}
-                                                                                                        onChange={(selectedOption) => handleSelectChange('equipment', selectedOption, index, 'assetNumberByBasin')}
-                                                                                                        placeholder="Select"
-                                                                                                        isSearchable={true}
-                                                                                                        menuPortalTarget={document.body}
-                                                                                                        menuPosition="fixed"
-                                                                                                        styles={{
-                                                                                                            control: (base) => ({
-                                                                                                                ...base,
-                                                                                                                borderRadius: "8px",
-                                                                                                                borderColor: "#ccc",
-                                                                                                                minHeight: "38px",
-                                                                                                            }),
-                                                                                                            menu: (base) => ({
-                                                                                                                ...base,
-                                                                                                                zIndex: 9999,
-                                                                                                            }),
-                                                                                                        }}
-                                                                                                    />
-                                                                                                </div>
-                                                                                            </div>
+                                                                                    </>
 
-                                                                                            <div className="d-flex">
-                                                                                                <div className="form-group-col select-supp-left">
-                                                                                                    <Select
-                                                                                                        classNamePrefix="react-select"
-                                                                                                        className="single-select-optn"
-                                                                                                        options={basins}
-                                                                                                        value={val.suppliedBy}
-                                                                                                        onChange={(selectedOption) => handleSelectChange('equipment', selectedOption, index, 'suppliedBy')}
-                                                                                                        placeholder="Select"
-                                                                                                        isSearchable={true}
-                                                                                                        menuPortalTarget={document.body}
-                                                                                                        menuPosition="fixed"
-                                                                                                        styles={{
-                                                                                                            control: (base) => ({
-                                                                                                                ...base,
-                                                                                                                borderRadius: "8px",
-                                                                                                                borderColor: "#ccc",
-                                                                                                                minHeight: "38px",
-                                                                                                            }),
-                                                                                                            menu: (base) => ({
-                                                                                                                ...base,
-                                                                                                                zIndex: 9999,
-                                                                                                            }),
-                                                                                                        }}
-                                                                                                    />
-                                                                                                </div>
 
-                                                                                                <div className="form-group-col select-supp-right">
-                                                                                                    <Select
-                                                                                                        classNamePrefix="react-select"
-                                                                                                        options={raNumbers}
-                                                                                                        value={val.assetNumberByBasin}
-                                                                                                        onChange={(selectedOption) => handleSelectChange('equipment', selectedOption, index, 'assetNumberByBasin')}
-                                                                                                        placeholder="Select"
-                                                                                                        isSearchable={true}
-                                                                                                        menuPortalTarget={document.body}
-                                                                                                        menuPosition="fixed"
-                                                                                                        styles={{
-                                                                                                            control: (base) => ({
-                                                                                                                ...base,
-                                                                                                                borderRadius: "8px",
-                                                                                                                borderColor: "#ccc",
-                                                                                                                minHeight: "38px",
-                                                                                                            }),
-                                                                                                            menu: (base) => ({
-                                                                                                                ...base,
-                                                                                                                zIndex: 9999,
-                                                                                                            }),
-                                                                                                        }}
-                                                                                                    />
-                                                                                                </div>
-                                                                                            </div>
-                                                                                        </>
 
                                                                                 }
 
