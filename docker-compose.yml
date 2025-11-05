@@ -1,0 +1,24 @@
+version: '3.3'
+services: 
+  frontend-dev-shipment:
+    # image: shipmentmanagement.azurecr.io/frontendshipment:latest    
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    container_name: frontend-dev-shipment #sudo docker-compose -f docker-compose.dev.yml up  --scale shipmentflask=3 -d
+    image: frontend-shipment
+    restart: always
+    ports:
+      - "3000:80"
+    volumes:
+      - .:/code:rw
+
+    networks:
+      - shipment-dev
+      
+networks:
+  shipment-dev:
+    external: true
+
+
+
