@@ -44,6 +44,17 @@ export const saveHSE = (token, payload) =>
     { headers: { Authorization: `Bearer ${token}` } }
   );
 
+  export const getLabItems = (token, job_id) => 
+  appclient.get(
+    `get_lab_equipment?id=${job_id}`,
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+  export const saveLabItems = (token, payload) =>
+  appclient.post(
+    "save_lab_equipment",
+    payload,
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
 
 
 export const getRegions = (token) => client.get(`pricebook/get_regions`, { headers: { "Authorization": `Bearer ${token}` } });
