@@ -5,6 +5,7 @@ export const getDeals = (token, deal_id) => appclient.get(`get_deal?deal_id=${de
 export const getEquipmentNumbers = (token, RsNumber, basin) => appclient.get(`get_bc_resource?resource_group_no=${RsNumber}&basin=${basin}`, { headers: { "Authorization": `Bearer ${token}` } });
 export const getEqipment = (token, id) => appclient.get(`get_equipments?id=${id}`, { headers: { "Authorization": `Bearer ${token}` } });
 export const getBasins = (token, RsNumber) => appclient.get(`get_basin?resource_group_no=${RsNumber}`, { headers: { "Authorization": `Bearer ${token}` } });
+export const getBasinsOptions = (token) => appclient.get(`get_basin`, { headers: { "Authorization": `Bearer ${token}` } });
 
 export const getHose = (token, id) =>
   appclient.get(`get_hose?id=${id}`, {
