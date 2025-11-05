@@ -11,7 +11,7 @@ import minusIcon from '../../assets/images/minus-btn-icon.svg';
 import bellIcon from '../../assets/images/bell-icon.svg';
 import toggleMenuIcon from '../../assets/images/toggle-menu-icon.svg';
 import exclamationIcon from '../../assets/images/exclamation-icon.svg';
-import { getDeals, getEquipmentNumbers, getBasins, getEqipment, saveEqipment, getHose, saveHose, 
+import { getDeals, getEquipmentNumbers, getBasins,getBasinsOptions, getEqipment, saveEqipment, getHose, saveHose, 
     getCustomPackage, saveCustomPackageItems, getHSE, saveHSE,getLabItems,saveLabItems } from "../../Services/dashboard";
 import FullScreenLoader from "../../Component/Loader";
 import Header from "../../Component/Header";
@@ -26,6 +26,8 @@ function Home() {
     ];
     let [raNumbers, setRaNumbers] = useState([])
     let [basins, setBasins] = useState([])
+        let [basinsOptions, setBasinsOptions] = useState([])
+
 
     let [deals, setDeals] = useState(
         {
@@ -129,6 +131,7 @@ function Home() {
         fetchCustomPackage(3); // new
         fetchHSEItems(3);
         fetchLabItems(3)
+        fetchBasinsOptions()
         // fetchRsNumber('RA')
         // fetchBasins()
     }, []);
@@ -389,7 +392,21 @@ const fetchLabItems = async (job_id) => {
             }
         }
     }
-
+    let fetchBasinsOptions = async () => {
+        setIsBasinLoading(true)
+        let res = await getBasinsOptions(localStorage?.access_token)
+        setIsBasinLoading(false)
+        if (res.status == 200) {
+            if (res.data?.status_code == 200) {
+                const output = res?.data?.result.map(item => ({
+                    value: item,
+                    label: item
+                }));
+                //return output
+                setBasinsOptions(output)
+            }
+        }
+    }
 
     let handleAddData = (type, index) => {
         if (type === 'equipment') {
@@ -1163,7 +1180,7 @@ const fetchLabItems = async (job_id) => {
                                                                                                 <div className="form-group-col select-supp-by-wth">
                                                                                                     <Select
                                                                                                         classNamePrefix="react-select"
-                                                                                                        options={basins}
+                                                                                                        options={basinsOptions}
                                                                                                         value={val.suppliedBy}
                                                                                                         onChange={(selectedOption) => handleSelectChange('house', selectedOption, index, 'suppliedBy')}
                                                                                                         placeholder="Select"
@@ -1720,12 +1737,28 @@ const fetchLabItems = async (job_id) => {
                                                                                     />
                                                                                 </td>
                                                                                 <td>
-                                                                                    <Form.Control
-                                                                                        type="text"
-                                                                                        name="suppliedBy"
-                                                                                        value={val.suppliedBy}
-                                                                                        onChange={(e) => handleInputChange("custom", e, index)}
-                                                                                    />
+                                                                                    <Select
+                                                                                                        classNamePrefix="react-select"
+                                                                                                        options={basinsOptions}
+                                                                                                        value={val.suppliedBy}
+                                                                                                        onChange={(selectedOption) => handleSelectChange('custom', selectedOption, index, 'suppliedBy')}
+                                                                                                        placeholder="Select"
+                                                                                                        isSearchable={true}
+                                                                                                        menuPortalTarget={document.body}
+                                                                                                        menuPosition="fixed"
+                                                                                                        styles={{
+                                                                                                            control: (base) => ({
+                                                                                                                ...base,
+                                                                                                                borderRadius: "8px",
+                                                                                                                borderColor: "#ccc",
+                                                                                                                minHeight: "38px",
+                                                                                                            }),
+                                                                                                            menu: (base) => ({
+                                                                                                                ...base,
+                                                                                                                zIndex: 9999,
+                                                                                                            }),
+                                                                                                        }}
+                                                                                                    />
                                                                                 </td>
                                                                                 <td>
                                                                                     <Form.Control
@@ -1784,18 +1817,28 @@ const fetchLabItems = async (job_id) => {
           />
         </td>
         <td>
-          <Form.Control
-            type="text"
-            className="input-tb-txt"
-            value={item.suppliedBy || ""}
-            onChange={(e) =>
-              setLabItems((prev) =>
-                prev.map((itm, i) =>
-                  i === index ? { ...itm, suppliedBy: e.target.value } : itm
-                )
-              )
-            }
-          />
+            <Select
+                                                                                                        classNamePrefix="react-select"
+                                                                                                        options={basinsOptions}
+                                                                                                        value={item.suppliedBy}
+                                                                                                        onChange={(selectedOption) => handleSelectChange('lap', selectedOption, index, 'suppliedBy')}
+                                                                                                        placeholder="Select"
+                                                                                                        isSearchable={true}
+                                                                                                        menuPortalTarget={document.body}
+                                                                                                        menuPosition="fixed"
+                                                                                                        styles={{
+                                                                                                            control: (base) => ({
+                                                                                                                ...base,
+                                                                                                                borderRadius: "8px",
+                                                                                                                borderColor: "#ccc",
+                                                                                                                minHeight: "38px",
+                                                                                                            }),
+                                                                                                            menu: (base) => ({
+                                                                                                                ...base,
+                                                                                                                zIndex: 9999,
+                                                                                                            }),
+                                                                                                        }}
+                                                                                                    />
         </td>
       </tr>
     ))}
@@ -1852,14 +1895,28 @@ const fetchLabItems = async (job_id) => {
                                                                                         </td>
                                                                                         <td>
                                                                                             <div className="form-group-col">
-                                                                                                <Form.Control
-                                                                                                    type="text"
-                                                                                                    className="input-tb-txt"
-                                                                                                    name="suppliedBy"
-                                                                                                    value={val.suppliedBy || ""}
-                                                                                                    onChange={(e) => handleInputChange("hse", e, index)}
-                                                                                                    placeholder=""
-                                                                                                />
+                                                                                                  <Select
+                                                                                                        classNamePrefix="react-select"
+                                                                                                        options={basinsOptions}
+                                                                                                        value={val.suppliedBy}
+                                                                                                        onChange={(selectedOption) => handleSelectChange('hse', selectedOption, index, 'suppliedBy')}
+                                                                                                        placeholder="Select"
+                                                                                                        isSearchable={true}
+                                                                                                        menuPortalTarget={document.body}
+                                                                                                        menuPosition="fixed"
+                                                                                                        styles={{
+                                                                                                            control: (base) => ({
+                                                                                                                ...base,
+                                                                                                                borderRadius: "8px",
+                                                                                                                borderColor: "#ccc",
+                                                                                                                minHeight: "38px",
+                                                                                                            }),
+                                                                                                            menu: (base) => ({
+                                                                                                                ...base,
+                                                                                                                zIndex: 9999,
+                                                                                                            }),
+                                                                                                        }}
+                                                                                                    />
                                                                                             </div>
                                                                                         </td>
                                                                                     </tr>
