@@ -376,8 +376,12 @@ ul {
 .multi-select-optn .react-select__indicators {
     height: 100%;
 } */
-
-
+.qnty-reqsr-web {
+    width: 25%;
+}
+.hse-qty-thead, .size-qty-thead, .supply-by-thead{
+    width: 20%;
+}
 
 
 

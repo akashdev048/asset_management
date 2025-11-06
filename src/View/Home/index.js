@@ -11,8 +11,10 @@ import minusIcon from '../../assets/images/minus-btn-icon.svg';
 import bellIcon from '../../assets/images/bell-icon.svg';
 import toggleMenuIcon from '../../assets/images/toggle-menu-icon.svg';
 import exclamationIcon from '../../assets/images/exclamation-icon.svg';
-import { getDeals, getEquipmentNumbers, getBasins,getBasinsOptions, getEqipment, saveEqipment, getHose, saveHose, 
-    getCustomPackage, saveCustomPackageItems, getHSE, saveHSE,getLabItems,saveLabItems } from "../../Services/dashboard";
+import {
+    getDeals, getEquipmentNumbers, getBasins, getBasinsOptions, getEqipment, saveEqipment, getHose, saveHose,
+    getCustomPackage, saveCustomPackageItems, getHSE, saveHSE, getLabItems, saveLabItems
+} from "../../Services/dashboard";
 import FullScreenLoader from "../../Component/Loader";
 import Header from "../../Component/Header";
 
@@ -26,7 +28,7 @@ function Home() {
     ];
     let [raNumbers, setRaNumbers] = useState([])
     let [basins, setBasins] = useState([])
-        let [basinsOptions, setBasinsOptions] = useState([])
+    let [basinsOptions, setBasinsOptions] = useState([])
 
 
     let [deals, setDeals] = useState(
@@ -116,14 +118,14 @@ function Home() {
     ]);
 
     const [labItems, setLabItems] = useState([
-  {
-    ID: 0,
-    LabItemsID: 0,
-    itemName: "",
-    quantity: null,
-    suppliedBy: "",
-  },
-]);
+        {
+            ID: 0,
+            LabItemsID: 0,
+            itemName: "",
+            quantity: null,
+            suppliedBy: "",
+        },
+    ]);
 
     useEffect(() => {
         fetchDealById(383)
@@ -314,29 +316,29 @@ function Home() {
             setShowLoader(false);
         }
     };
-const fetchLabItems = async (job_id) => {
-  setShowLoader(true);
-  try {
-    const res = await getLabItems(localStorage?.access_token, job_id);
-    setShowLoader(false);
+    const fetchLabItems = async (job_id) => {
+        setShowLoader(true);
+        try {
+            const res = await getLabItems(localStorage?.access_token, job_id);
+            setShowLoader(false);
 
-    if (res.status === 200 && res.data?.status_code === 200) {
-      const formatted = res.data.result.map((item, index) => ({
-        index,
-        ID: item.ID ?? null,
-        LabItemsID: item.LabItemsID ?? null,
-        itemName: item.ItemName ?? "",
-        quantity: item.Quantity ?? null,
-        suppliedBy: item.SuppliedBy ?? "",
-      }));
+            if (res.status === 200 && res.data?.status_code === 200) {
+                const formatted = res.data.result.map((item, index) => ({
+                    index,
+                    ID: item.ID ?? null,
+                    LabItemsID: item.LabItemsID ?? null,
+                    itemName: item.ItemName ?? "",
+                    quantity: item.Quantity ?? null,
+                    suppliedBy: item.SuppliedBy ?? "",
+                }));
 
-      setLabItems(formatted);
-    }
-  } catch (error) {
-    console.error("Error fetching lab items:", error);
-    setShowLoader(false);
-  }
-};
+                setLabItems(formatted);
+            }
+        } catch (error) {
+            console.error("Error fetching lab items:", error);
+            setShowLoader(false);
+        }
+    };
 
 
 
@@ -678,40 +680,40 @@ const fetchLabItems = async (job_id) => {
             }
         }
 
- else if (activeTab === "lap") {
-  const filteredItems = labItems.filter(
-    (item) => item.quantity || item.suppliedBy
-  );
+        else if (activeTab === "lap") {
+            const filteredItems = labItems.filter(
+                (item) => item.quantity || item.suppliedBy
+            );
 
-  const payload = {
-    job_id: 3, // make sure this variable is defined
-    items: filteredItems.map((item) => ({
-      ID: item.ID ?? 0,
-      Lab_Items_ID: item.LabItemsID ?? 0,
-      Requested_Quantity: item.quantity ?? 0,
-      Supplied_By: item.suppliedBy ?? "",
-    //   Size: "", // optional, if applicable
-    })),
-  };
+            const payload = {
+                job_id: 3, // make sure this variable is defined
+                items: filteredItems.map((item) => ({
+                    ID: item.ID ?? 0,
+                    Lab_Items_ID: item.LabItemsID ?? 0,
+                    Requested_Quantity: item.quantity ?? 0,
+                    Supplied_By: item.suppliedBy ?? "",
+                    //   Size: "", // optional, if applicable
+                })),
+            };
 
-  console.log("Saving lab items payload:", payload);
+            console.log("Saving lab items payload:", payload);
 
-  try {
-    setShowLoader(true);
-    const res = await saveLabItems(localStorage?.access_token, payload);
-    setShowLoader(false);
+            try {
+                setShowLoader(true);
+                const res = await saveLabItems(localStorage?.access_token, payload);
+                setShowLoader(false);
 
-    if (res.status === 200 && res.data?.status_code === 200) {
-      toast.success(res.data?.result?.message || "Lab items saved successfully!");
-    } else {
-      toast.error("Failed to save lab items ❌");
-    }
-  } catch (error) {
-    setShowLoader(false);
-    console.error("Error saving lab items:", error);
-    toast.error("Something went wrong while saving lab items.");
-  }
-}
+                if (res.status === 200 && res.data?.status_code === 200) {
+                    toast.success(res.data?.result?.message || "Lab items saved successfully!");
+                } else {
+                    toast.error("Failed to save lab items ❌");
+                }
+            } catch (error) {
+                setShowLoader(false);
+                console.error("Error saving lab items:", error);
+                toast.error("Something went wrong while saving lab items.");
+            }
+        }
         else if (activeTab === 'hse') {
             // 1️⃣ Build and filter payload
             const filteredItems = hseItems
@@ -1175,33 +1177,29 @@ const fetchLabItems = async (job_id) => {
                                                                                 </td>
                                                                                 <td>
                                                                                     <div className="d-flex align-items-center">
-                                                                                        <div className="form-group-col">
-                                                                                            <td>
-                                                                                                <div className="form-group-col select-supp-by-wth">
-                                                                                                    <Select
-                                                                                                        classNamePrefix="react-select"
-                                                                                                        options={basinsOptions}
-                                                                                                        value={val.suppliedBy}
-                                                                                                        onChange={(selectedOption) => handleSelectChange('house', selectedOption, index, 'suppliedBy')}
-                                                                                                        placeholder="Select"
-                                                                                                        isSearchable={true}
-                                                                                                        menuPortalTarget={document.body}
-                                                                                                        menuPosition="fixed"
-                                                                                                        styles={{
-                                                                                                            control: (base) => ({
-                                                                                                                ...base,
-                                                                                                                borderRadius: "8px",
-                                                                                                                borderColor: "#ccc",
-                                                                                                                minHeight: "38px",
-                                                                                                            }),
-                                                                                                            menu: (base) => ({
-                                                                                                                ...base,
-                                                                                                                zIndex: 9999,
-                                                                                                            }),
-                                                                                                        }}
-                                                                                                    />
-                                                                                                </div>
-                                                                                            </td>
+                                                                                        <div className="form-group-col select-supp-by-wth">
+                                                                                            <Select
+                                                                                                classNamePrefix="react-select"
+                                                                                                options={basinsOptions}
+                                                                                                value={val.suppliedBy}
+                                                                                                onChange={(selectedOption) => handleSelectChange('house', selectedOption, index, 'suppliedBy')}
+                                                                                                placeholder="Select"
+                                                                                                isSearchable={true}
+                                                                                                menuPortalTarget={document.body}
+                                                                                                menuPosition="fixed"
+                                                                                                styles={{
+                                                                                                    control: (base) => ({
+                                                                                                        ...base,
+                                                                                                        borderRadius: "8px",
+                                                                                                        borderColor: "#ccc",
+                                                                                                        minHeight: "38px",
+                                                                                                    }),
+                                                                                                    menu: (base) => ({
+                                                                                                        ...base,
+                                                                                                        zIndex: 9999,
+                                                                                                    }),
+                                                                                                }}
+                                                                                            />
                                                                                         </div>
                                                                                         <div className="d-flex align-items-center button-wt-action">
                                                                                             <button onClick={() => handleAddData('house', val.index)} type="button" className="btn icon-btn-action"><img src={plusIcon} alt="icon" /></button>
@@ -1713,8 +1711,9 @@ const fetchLabItems = async (job_id) => {
                                                                         <tr>
                                                                             <th>Item Name</th>
                                                                             <th>Quantity <span className="small-th-head">(Requested)</span></th>
-                                                                            <th>Supplied By</th>
+                                                                            <th className="supply-by-thead">Supplied By</th>
                                                                             <th>Notes</th>
+                                                                            <th></th>
                                                                         </tr>
                                                                     </thead>
                                                                     <tbody>
@@ -1738,27 +1737,27 @@ const fetchLabItems = async (job_id) => {
                                                                                 </td>
                                                                                 <td>
                                                                                     <Select
-                                                                                                        classNamePrefix="react-select"
-                                                                                                        options={basinsOptions}
-                                                                                                        value={val.suppliedBy}
-                                                                                                        onChange={(selectedOption) => handleSelectChange('custom', selectedOption, index, 'suppliedBy')}
-                                                                                                        placeholder="Select"
-                                                                                                        isSearchable={true}
-                                                                                                        menuPortalTarget={document.body}
-                                                                                                        menuPosition="fixed"
-                                                                                                        styles={{
-                                                                                                            control: (base) => ({
-                                                                                                                ...base,
-                                                                                                                borderRadius: "8px",
-                                                                                                                borderColor: "#ccc",
-                                                                                                                minHeight: "38px",
-                                                                                                            }),
-                                                                                                            menu: (base) => ({
-                                                                                                                ...base,
-                                                                                                                zIndex: 9999,
-                                                                                                            }),
-                                                                                                        }}
-                                                                                                    />
+                                                                                        classNamePrefix="react-select"
+                                                                                        options={basinsOptions}
+                                                                                        value={val.suppliedBy}
+                                                                                        onChange={(selectedOption) => handleSelectChange('custom', selectedOption, index, 'suppliedBy')}
+                                                                                        placeholder="Select"
+                                                                                        isSearchable={true}
+                                                                                        menuPortalTarget={document.body}
+                                                                                        menuPosition="fixed"
+                                                                                        styles={{
+                                                                                            control: (base) => ({
+                                                                                                ...base,
+                                                                                                borderRadius: "8px",
+                                                                                                borderColor: "#ccc",
+                                                                                                minHeight: "38px",
+                                                                                            }),
+                                                                                            menu: (base) => ({
+                                                                                                ...base,
+                                                                                                zIndex: 9999,
+                                                                                            }),
+                                                                                        }}
+                                                                                    />
                                                                                 </td>
                                                                                 <td>
                                                                                     <Form.Control
@@ -1769,8 +1768,8 @@ const fetchLabItems = async (job_id) => {
                                                                                     />
                                                                                 </td>
                                                                                 <td>
-                                                                                    <button onClick={() => handleAddData("custom", index)}>+</button>
-                                                                                    {index !== 0 && <button onClick={() => handleRemoveData("custom", index)}>-</button>}
+                                                                                    <button onClick={() => handleAddData("custom", index)} type="button" className="btn icon-btn-action"><img src={plusIcon} alt="icon" /></button>
+                                                                                    {index !== 0 && <button onClick={() => handleRemoveData("custom", index)} type="button" className="btn icon-btn-action"><img src={minusIcon} alt="icon" /></button>}
                                                                                 </td>
                                                                             </tr>
                                                                         ))}
@@ -1789,61 +1788,63 @@ const fetchLabItems = async (job_id) => {
                                                             activeTab === 'lap' ?
                                                                 <>
                                                                     <Table responsive className="table-more-asts striped-table">
-  <thead>
-    <tr>
-      <th>Item Name</th>
-      <th>Quantity (Requested)</th>
-      <th>Supplied By</th>
-    </tr>
-  </thead>
-  <tbody>
-    {labItems.map((item, index) => (
-      <tr key={index}>
-        <td>{item.itemName}</td>
-        <td>
-          <Form.Control
-            type="number"
-            className="input-tb-txt"
-            value={item.quantity || ""}
-            onChange={(e) =>
-              setLabItems((prev) =>
-                prev.map((itm, i) =>
-                  i === index
-                    ? { ...itm, quantity: Number(e.target.value) || null }
-                    : itm
-                )
-              )
-            }
-          />
-        </td>
-        <td>
-            <Select
-                                                                                                        classNamePrefix="react-select"
-                                                                                                        options={basinsOptions}
-                                                                                                        value={item.suppliedBy}
-                                                                                                        onChange={(selectedOption) => handleSelectChange('lap', selectedOption, index, 'suppliedBy')}
-                                                                                                        placeholder="Select"
-                                                                                                        isSearchable={true}
-                                                                                                        menuPortalTarget={document.body}
-                                                                                                        menuPosition="fixed"
-                                                                                                        styles={{
-                                                                                                            control: (base) => ({
-                                                                                                                ...base,
-                                                                                                                borderRadius: "8px",
-                                                                                                                borderColor: "#ccc",
-                                                                                                                minHeight: "38px",
-                                                                                                            }),
-                                                                                                            menu: (base) => ({
-                                                                                                                ...base,
-                                                                                                                zIndex: 9999,
-                                                                                                            }),
-                                                                                                        }}
-                                                                                                    />
-        </td>
-      </tr>
-    ))}
-  </tbody>
-</Table>
+                                                                        <thead>
+                                                                            <tr>
+                                                                                <th>Item Name</th>
+                                                                                <th className="qnty-reqsr-web">Quantity (Requested)</th>
+                                                                                <th>Supplied By</th>
+                                                                            </tr>
+                                                                        </thead>
+                                                                        <tbody>
+                                                                            {labItems.map((item, index) => (
+                                                                                <tr key={index}>
+                                                                                    <td>{item.itemName}</td>
+                                                                                    <td>
+                                                                                        <div className="quanty-web-mts">
+                                                                                            <Form.Control
+                                                                                                type="number"
+                                                                                                className="input-tb-txt"
+                                                                                                value={item.quantity || ""}
+                                                                                                onChange={(e) =>
+                                                                                                    setLabItems((prev) =>
+                                                                                                        prev.map((itm, i) =>
+                                                                                                            i === index
+                                                                                                                ? { ...itm, quantity: Number(e.target.value) || null }
+                                                                                                                : itm
+                                                                                                        )
+                                                                                                    )
+                                                                                                }
+                                                                                            />
+                                                                                        </div>
+                                                                                    </td>
+                                                                                    <td>
+                                                                                        <Select
+                                                                                            classNamePrefix="react-select"
+                                                                                            options={basinsOptions}
+                                                                                            value={item.suppliedBy}
+                                                                                            onChange={(selectedOption) => handleSelectChange('lap', selectedOption, index, 'suppliedBy')}
+                                                                                            placeholder="Select"
+                                                                                            isSearchable={true}
+                                                                                            menuPortalTarget={document.body}
+                                                                                            menuPosition="fixed"
+                                                                                            styles={{
+                                                                                                control: (base) => ({
+                                                                                                    ...base,
+                                                                                                    borderRadius: "8px",
+                                                                                                    borderColor: "#ccc",
+                                                                                                    minHeight: "38px",
+                                                                                                }),
+                                                                                                menu: (base) => ({
+                                                                                                    ...base,
+                                                                                                    zIndex: 9999,
+                                                                                                }),
+                                                                                            }}
+                                                                                        />
+                                                                                    </td>
+                                                                                </tr>
+                                                                            ))}
+                                                                        </tbody>
+                                                                    </Table>
                                                                     <div className="total-qty-footer">
                                                                         <div className="total-ft-wth">
                                                                             <span class="txt-label-ttl">Total QTY <span className="d-inline-block ms-3"></span>5</span>
@@ -1857,8 +1858,8 @@ const fetchLabItems = async (job_id) => {
                                                                             <thead className="thead-itms-wp space-table-head">
                                                                                 <tr>
                                                                                     <th>Item Name</th>
-                                                                                    <th>Quantity <span className="small-th-head">(Requested)</span></th>
-                                                                                    <th>Size <span className="small-th-head">(If Applicable)</span></th>
+                                                                                    <th className="hse-qty-thead">Quantity <span className="small-th-head">(Requested)</span></th>
+                                                                                    <th className="size-qty-thead">Size <span className="small-th-head">(If Applicable)</span></th>
                                                                                     <th>Supplied By</th>
                                                                                 </tr>
                                                                             </thead>
@@ -1895,28 +1896,28 @@ const fetchLabItems = async (job_id) => {
                                                                                         </td>
                                                                                         <td>
                                                                                             <div className="form-group-col">
-                                                                                                  <Select
-                                                                                                        classNamePrefix="react-select"
-                                                                                                        options={basinsOptions}
-                                                                                                        value={val.suppliedBy}
-                                                                                                        onChange={(selectedOption) => handleSelectChange('hse', selectedOption, index, 'suppliedBy')}
-                                                                                                        placeholder="Select"
-                                                                                                        isSearchable={true}
-                                                                                                        menuPortalTarget={document.body}
-                                                                                                        menuPosition="fixed"
-                                                                                                        styles={{
-                                                                                                            control: (base) => ({
-                                                                                                                ...base,
-                                                                                                                borderRadius: "8px",
-                                                                                                                borderColor: "#ccc",
-                                                                                                                minHeight: "38px",
-                                                                                                            }),
-                                                                                                            menu: (base) => ({
-                                                                                                                ...base,
-                                                                                                                zIndex: 9999,
-                                                                                                            }),
-                                                                                                        }}
-                                                                                                    />
+                                                                                                <Select
+                                                                                                    classNamePrefix="react-select"
+                                                                                                    options={basinsOptions}
+                                                                                                    value={val.suppliedBy}
+                                                                                                    onChange={(selectedOption) => handleSelectChange('hse', selectedOption, index, 'suppliedBy')}
+                                                                                                    placeholder="Select"
+                                                                                                    isSearchable={true}
+                                                                                                    menuPortalTarget={document.body}
+                                                                                                    menuPosition="fixed"
+                                                                                                    styles={{
+                                                                                                        control: (base) => ({
+                                                                                                            ...base,
+                                                                                                            borderRadius: "8px",
+                                                                                                            borderColor: "#ccc",
+                                                                                                            minHeight: "38px",
+                                                                                                        }),
+                                                                                                        menu: (base) => ({
+                                                                                                            ...base,
+                                                                                                            zIndex: 9999,
+                                                                                                        }),
+                                                                                                    }}
+                                                                                                />
                                                                                             </div>
                                                                                         </td>
                                                                                     </tr>

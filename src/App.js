@@ -20,8 +20,8 @@ function App(props) {
   return (
     <>
       {
-        isLoggedIn ?
-        //true ?
+        // isLoggedIn ?
+        true ?
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/home" element={<Home key="home" />} />
