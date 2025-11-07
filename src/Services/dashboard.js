@@ -6,6 +6,10 @@ export const getEquipmentNumbers = (token, RsNumber, basin) => appclient.get(`ge
 export const getEqipment = (token, id) => appclient.get(`get_equipments?id=${id}`, { headers: { "Authorization": `Bearer ${token}` } });
 export const getBasins = (token, RsNumber) => appclient.get(`get_basin?resource_group_no=${RsNumber}`, { headers: { "Authorization": `Bearer ${token}` } });
 export const getBasinsOptions = (token) => appclient.get(`get_basin`, { headers: { "Authorization": `Bearer ${token}` } });
+export const getItems = (token, id) => appclient.get(`get_items?id=${id}`, { headers: { "Authorization": `Bearer ${token}` } });
+export const saveItems = (token, payload) => appclient.post(`save_items`, payload, { headers: { "Authorization": `Bearer ${token}` } });
+
+
 
 export const getHose = (token, id) =>
   appclient.get(`get_hose?id=${id}`, {

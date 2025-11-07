@@ -13,7 +13,7 @@ import toggleMenuIcon from '../../assets/images/toggle-menu-icon.svg';
 import exclamationIcon from '../../assets/images/exclamation-icon.svg';
 import {
     getDeals, getEquipmentNumbers, getBasins, getBasinsOptions, getEqipment, saveEqipment, getHose, saveHose,
-    getCustomPackage, saveCustomPackageItems, getHSE, saveHSE, getLabItems, saveLabItems
+    getCustomPackage, saveCustomPackageItems, getHSE, saveHSE, getLabItems, saveLabItems, getItems, saveItems
 } from "../../Services/dashboard";
 import FullScreenLoader from "../../Component/Loader";
 import Header from "../../Component/Header";
@@ -22,14 +22,15 @@ function Home() {
     let [activeTab, setActiveTab] = useState('equipment')
     let [isBasinLoading, setIsBasinLoading] = useState(false)
     const [showLoader, setShowLoader] = useState(false);
-    const itemOptions = [
-        { value: "item 1", label: "item 1" },
-        { value: "item 2", label: "item 2" },
+    const housesOptions = [
+        { value: "TANK TRUCK HOSE (BLACK)", label: "TANK TRUCK HOSE (BLACK)" },
+        { value: "S3S RED HOSE", label: "S3S RED HOSE" },
+        { value: "KANAFLEX HEAVY DUTY (ORANGE)", label: "KANAFLEX HEAVY DUTY (ORANGE)" },
     ];
     let [raNumbers, setRaNumbers] = useState([])
     let [basins, setBasins] = useState([])
     let [basinsOptions, setBasinsOptions] = useState([])
-
+    let [itemsData, setItemsData] = useState([])
 
     let [deals, setDeals] = useState(
         {
@@ -45,8 +46,6 @@ function Home() {
             "PrimaryBasin": ""
         }
     )
-
-
     let [equipments, setEquipments] = useState(
         [
             {
@@ -62,7 +61,7 @@ function Home() {
                         },
                         AssetDetails: [
                             {
-                                value: null, label: "", BCR_ID: null
+                                value: null, label: "", AssetID: null
                             }
                         ],
                         AssetCount: 0
@@ -129,14 +128,20 @@ function Home() {
 
     useEffect(() => {
         fetchDealById(383)
-        fetchHose(3);
-        fetchCustomPackage(3); // new
-        fetchHSEItems(3);
-        fetchLabItems(3)
-        fetchBasinsOptions()
         // fetchRsNumber('RA')
         // fetchBasins()
     }, []);
+
+    useEffect(() => {
+        if (deals.ID) {
+            fetchHose(deals.ID);
+            fetchCustomPackage(deals.ID);
+            fetchHSEItems(deals.ID);
+            fetchLabItems(deals.ID)
+            fetchItems(deals.ID)
+            fetchBasinsOptions()
+        }
+    }, [deals]);
 
 
     useEffect(() => {
@@ -229,9 +234,9 @@ function Home() {
                                 SuppliedBy: { value: asset.SuppliedBy, label: asset.SuppliedBy },
                                 AssetCount: asset?.AssetCount,
                                 AssetDetails: asset.AssetDetails.map(detail => ({
-                                    value: detail.AssetID,
+                                    AssetID: detail.AssetID,
                                     label: detail.AssetNo,
-                                    BCR_ID: detail.BCR_ID
+                                    value: detail.BCR_ID
                                 }))
 
                             }
@@ -245,10 +250,10 @@ function Home() {
         }
     }
     let fetchHose = async (hose_id) => {
-        setShowLoader(true);
+        // setShowLoader(true);
         try {
             let res = await getHose(localStorage?.access_token, hose_id);
-            setShowLoader(false);
+            //   setShowLoader(false);
 
             if (res.status === 200 && res.data?.status_code === 200) {
                 const formatted = res.data.result.map((item, index) => ({
@@ -272,10 +277,10 @@ function Home() {
     };
 
     let fetchCustomPackage = async (package_id) => {
-        setShowLoader(true);
+        // setShowLoader(true);
         try {
             const res = await getCustomPackage(localStorage?.access_token, package_id);
-            setShowLoader(false);
+            // setShowLoader(false);
 
             if (res.status === 200 && res.data?.status_code === 200) {
                 const formatted = res.data.result.map((item, index) => ({
@@ -285,7 +290,6 @@ function Home() {
                     suppliedBy: item.SuppliedBy ?? '',
                     notes: item.Notes ?? '',
                 }));
-
                 setCustomPackages(formatted);
             }
         } catch (error) {
@@ -295,10 +299,10 @@ function Home() {
     };
 
     const fetchHSEItems = async (job_id) => {
-        setShowLoader(true);
+        //   setShowLoader(true);
         try {
             const res = await getHSE(localStorage?.access_token, job_id);
-            setShowLoader(false);
+            //   setShowLoader(false);
 
             if (res.status === 200 && res.data?.status_code === 200) {
                 const formatted = res.data.result.map((item, index) => ({
@@ -317,10 +321,10 @@ function Home() {
         }
     };
     const fetchLabItems = async (job_id) => {
-        setShowLoader(true);
+        //setShowLoader(true);
         try {
             const res = await getLabItems(localStorage?.access_token, job_id);
-            setShowLoader(false);
+            // setShowLoader(false);
 
             if (res.status === 200 && res.data?.status_code === 200) {
                 const formatted = res.data.result.map((item, index) => ({
@@ -394,10 +398,21 @@ function Home() {
             }
         }
     }
+
+    let fetchItems = async (id) => {
+        let res = await getItems(localStorage?.access_token, id)
+        if (res.status == 200) {
+            if (res.data?.status_code == 200) {
+                setItemsData(res?.data?.result)
+
+            }
+        }
+
+    }
     let fetchBasinsOptions = async () => {
-        setIsBasinLoading(true)
+        //   setIsBasinLoading(true)
         let res = await getBasinsOptions(localStorage?.access_token)
-        setIsBasinLoading(false)
+        //   setIsBasinLoading(false)
         if (res.status == 200) {
             if (res.data?.status_code == 200) {
                 const output = res?.data?.result.map(item => ({
@@ -426,7 +441,7 @@ function Home() {
                         },
                         AssetDetails: [
                             {
-                                value: null, label: "", BCR_ID: null
+                                value: null, label: "", AssetID: null
                             }
                         ],
                         AssetCount: 0
@@ -524,12 +539,21 @@ function Home() {
             temp[index][name] = value;
             setCustomPackages(temp);
         }
+        else if (type === "lap") {
+            const temp = [...labItems];
+            temp[index][name] = value;
+            setLabItems(temp);
+        }
+        else if (type === "hse") {
+            const temp = [...hseItems];
+            temp[index][name] = value;
+            setLabItems(temp);
+        }
+
     }
     let handleSelectChange = (type, selectedOption, index, fieldName) => {
         if (type === 'equipment') {
-            let temp = [...equipments];
-            temp[index][fieldName] = selectedOption;
-            setEquipments(temp);
+
         }
         else if (type === 'house') {
             let temp = [...houses];
@@ -552,12 +576,34 @@ function Home() {
             temp[index].Assets[fieldName].SuppliedBy = selectedOption
             setEquipments(temp)
         }
+        else if (type === "lapSelect") {
+            const temp = [...labItems];
+            temp[index][fieldName] = selectedOption.value;
+            setLabItems(temp);
+        }
+        else if (type === "hse") {
+            const temp = [...hseItems];
+            temp[index][fieldName] = selectedOption.value;
+            setHseItems(temp);
+        }
+        else if (type === "hoseType") {
+            const temp = [...houses];
+            temp[index][fieldName] = selectedOption.value;
+            setHouses(temp);
+        }
     }
 
-    let handleSuppliedEquipment = (selectedOption, equipmentIndex, assetIndex, fieldName) => {
-        let temp = [...equipments];
-        temp[equipmentIndex][fieldName] = selectedOption;
-        setEquipments(temp);
+    let handleSuppliedEquipment = (type, selectedOption, equipmentIndex, assetIndex, fieldName) => {
+        if (type == 'basin') {
+            let temp = [...equipments];
+            temp[equipmentIndex].Assets[assetIndex].SuppliedBy = selectedOption;
+            setEquipments(temp);
+        } else {
+            let temp = [...equipments];
+            temp[equipmentIndex].Assets[assetIndex].AssetDetails = selectedOption
+            // setEquipments(temp);
+        }
+
     }
 
     let handleDealsChange = (e) => {
@@ -581,8 +627,8 @@ function Home() {
                 Assets: item.Assets.map(asset => ({
                     SuppliedBy: asset.SuppliedBy?.value || "",
                     AssetDetails: asset.AssetDetails.map(detail => ({
-                        AssetID: detail.value || null,
-                        BCR_ID: detail.BCR_ID || null,
+                        AssetID: detail.AssetID || null,
+                        BCR_ID: detail.value || null,
                         AssetNo: detail.label || ""
                     }))
                 }))
@@ -604,9 +650,10 @@ function Home() {
             setShowLoader(false)
         }
         else if (activeTab === 'house') {
+            console.log("housesss99 >", houses)
             // 1️⃣ Construct the payload
             const payload = {
-                job_id: 3,
+                job_id: deals.ID,
                 items: houses.map(item => ({
                     ID: item.ID ?? 0,
                     Hose_Type: item.houseType ?? '',
@@ -642,11 +689,35 @@ function Home() {
         }
         else if (activeTab == 'items') {
             //// save items api call
+            const output = itemsData.flatMap(category =>
+                category.Items
+                    .filter(item => item.Quantity !== null || item.SuppliedBy !== null)
+                    .map(item => ({
+                        ID: item.ID ?? 0,
+                        Item_Details_ID: item.ItemDetailsID ?? 0,
+                        Requested_Quantity: item.Quantity ?? 0,
+                        Supplied_By: item.SuppliedBy ?? ""
+                    }))
+            );
+            let payload = {
+                "job_id": deals.ID,
+                "items": output
+            }
+            setShowLoader(true);
+            let res = await saveItems(localStorage, payload)
+            setShowLoader(false);
+            if (res.status === 200 && res.data?.status_code === 200) {
+                // ✅ Success toast
+                toast.success(res.data?.result.message || "Items details saved successfully!");
+            } else {
+                // ⚠️ Failure toast
+                toast.error("Failed to save items details ❌");
+            }
         }
         else if (activeTab === 'custom') {
             // 1️⃣ Build payload
             const payload = {
-                job_id: 3,
+                job_id: deals.ID,
                 items: customPackages.map(item => ({
                     ID: item.ID ?? 0,
                     Item_Name: item.itemName ?? '',
@@ -686,7 +757,7 @@ function Home() {
             );
 
             const payload = {
-                job_id: 3, // make sure this variable is defined
+                job_id: deals.ID, // make sure this variable is defined
                 items: filteredItems.map((item) => ({
                     ID: item.ID ?? 0,
                     Lab_Items_ID: item.LabItemsID ?? 0,
@@ -738,11 +809,9 @@ function Home() {
                 ); // optional strict filter: only keep valid complete items
 
             const payload = {
-                job_id: 3, // use dynamic job_id if available
+                job_id: deals.ID, // use dynamic job_id if available
                 items: filteredItems,
             };
-
-            console.log("Saving filtered HSE payload:", payload);
 
             // 2️⃣ Prevent empty payload submission
             if (payload.items.length === 0) {
@@ -774,6 +843,28 @@ function Home() {
         }
 
     }
+
+    const handleItemsInputChange = (categoryIndex, itemIndex, field, value) => {
+        if (field == 'Quantity') {
+            console.log("val -->", value)
+            setItemsData(prevData => {
+                const updatedData = [...prevData];
+                const itemToUpdate = updatedData[categoryIndex].Items[itemIndex];
+                itemToUpdate[field] = value;
+                return updatedData;
+            })
+        } else {
+            setItemsData(prevData => {
+                const updatedData = [...prevData];
+                const itemToUpdate = updatedData[categoryIndex].Items[itemIndex];
+                itemToUpdate[field] = value.value
+                return updatedData;
+            })
+        }
+
+    };
+
+    console.log("houses=-->", houses)
 
     return (
         <>
@@ -954,6 +1045,7 @@ function Home() {
                                                                                         onChange={(e) => handleInputChange('equipment', e, index)}
                                                                                         className="input-tb-txt"
                                                                                         value={val.OperationQuantity}
+                                                                                        min={0}
                                                                                         name='OperationQuantity'
                                                                                         placeholder=""
                                                                                     />
@@ -966,6 +1058,7 @@ function Home() {
                                                                                         onChange={(e) => handleInputChange('equipment', e, index)}
                                                                                         className="input-tb-txt"
                                                                                         value={val.SuppliedQuantity}
+                                                                                        min={0}
                                                                                         name='SuppliedQuantity'
                                                                                         placeholder=""
                                                                                     />
@@ -997,7 +1090,7 @@ function Home() {
 
                                                                                                                     }}
                                                                                                                     placeholder={"Select"}
-                                                                                                                    onChange={(selectedOption) => handleSuppliedEquipment(selectedOption, index, i, 'suppliedBy')}
+                                                                                                                    onChange={(selectedOption) => handleSuppliedEquipment('basin', selectedOption, index, i, 'SuppliedBy')}
                                                                                                                     isSearchable={true}
                                                                                                                     menuPortalTarget={document.body}
                                                                                                                     menuPosition="fixed"
@@ -1030,9 +1123,8 @@ function Home() {
                                                                                                                             (item) => item?.value && item?.label
                                                                                                                         )
                                                                                                                     }
-                                                                                                                    onChange={(selectedOption) =>
-                                                                                                                        handleSelectChange('assetNumberByBasin', selectedOption, index, 'assetNumberByBasin')
-                                                                                                                    }
+                                                                                                                    onChange={(selectedOption) => handleSuppliedEquipment('raNumber', selectedOption, index, i, 'SuppliedBy')}
+
                                                                                                                     onMenuOpen={() => {
                                                                                                                         fetchRsNumber(val?.AssetType, ele.SuppliedBy?.value, index, i);
                                                                                                                     }}
@@ -1152,17 +1244,40 @@ function Home() {
                                                                             <tr>
                                                                                 <td>
                                                                                     <div className="form-group-col">
-                                                                                        <Form.Control type="text" className="input-tb-txt" onChange={(e) => handleInputChange('house', e, index)} name='houseType' value={val.houseType} placeholder="" />
+                                                                                        <Select
+                                                                                            classNamePrefix="react-select"
+                                                                                            options={housesOptions}
+                                                                                            defaultInputValue={val.houseType}
+                                                                                            onChange={(selectedOption) => handleSelectChange('hoseType', selectedOption, index, 'houseType')}
+                                                                                            placeholder="Select"
+                                                                                            isSearchable={true}
+                                                                                            menuPortalTarget={document.body}
+                                                                                            menuPosition="fixed"
+                                                                                            styles={{
+                                                                                                control: (base) => ({
+                                                                                                    ...base,
+                                                                                                    borderRadius: "8px",
+                                                                                                    borderColor: "#ccc",
+                                                                                                    minHeight: "38px",
+                                                                                                }),
+                                                                                                menu: (base) => ({
+                                                                                                    ...base,
+                                                                                                    zIndex: 9999,
+                                                                                                }),
+                                                                                            }}
+                                                                                        />
+
+                                                                                        {/* <Form.Control type="text" className="input-tb-txt" onChange={(e) => handleInputChange('house', e, index)} name='houseType' value={val.houseType} placeholder="" /> */}
                                                                                     </div>
                                                                                 </td>
                                                                                 <td>
                                                                                     <div className="form-group-col">
-                                                                                        <Form.Control type="number" className="input-tb-txt" onChange={(e) => handleInputChange('house', e, index)} name='houseDiameter' value={val.houseDiameter} placeholder="" />
+                                                                                        <Form.Control type="number" min={0} className="input-tb-txt" onChange={(e) => handleInputChange('house', e, index)} name='houseDiameter' value={val.houseDiameter} placeholder="" />
                                                                                     </div>
                                                                                 </td>
                                                                                 <td>
                                                                                     <div className="form-group-col">
-                                                                                        <Form.Control type="number" className="input-tb-txt" onChange={(e) => handleInputChange('house', e, index)} name='sectionLength' value={val.sectionLength} placeholder="" />
+                                                                                        <Form.Control type="number" min={0} className="input-tb-txt" onChange={(e) => handleInputChange('house', e, index)} name='sectionLength' value={val.sectionLength} placeholder="" />
                                                                                     </div>
                                                                                 </td>
                                                                                 <td>
@@ -1172,7 +1287,7 @@ function Home() {
                                                                                 </td>
                                                                                 <td>
                                                                                     <div className="form-group-col">
-                                                                                        <Form.Control type="number" className="input-tb-txt" onChange={(e) => handleInputChange('house', e, index)} name='quantity' value={val.quantity} placeholder="" />
+                                                                                        <Form.Control type="number" min={0} className="input-tb-txt" onChange={(e) => handleInputChange('house', e, index)} name='quantity' value={val.quantity} placeholder="" />
                                                                                     </div>
                                                                                 </td>
                                                                                 <td>
@@ -1231,372 +1346,176 @@ function Home() {
                                                     activeTab === 'items' ?
                                                         <>
                                                             <div className="table-accordion-assets">
-                                                                <Accordion defaultActiveKey="0">
-                                                                    <Accordion.Item className="accordion-card-itm" eventKey="0">
-                                                                        <Accordion.Header className="heading-accordian-wp">Fittings</Accordion.Header>
-                                                                        <Accordion.Body className="p-0">
-                                                                            <Accordion>
-                                                                                <Accordion.Item className="item-accordian-lst" eventKey="0">
-                                                                                    <Accordion.Header>Camlock Fitting</Accordion.Header>
-                                                                                    <Accordion.Body className="p-0">
-                                                                                        <Table responsive className="table-more-asts">
-                                                                                            <thead className="thead-itms-wp space-table-head">
-                                                                                                <tr>
-                                                                                                    <th>Item Name</th>
-                                                                                                    <th>Quantity <span className="small-th-head">(Requested)</span></th>
-                                                                                                    <th>Supplied By</th>
+                                                                {/* <Accordion defaultActiveKey="0"> */}
+                                                                <Accordion >
+                                                                    {itemsData.map((category, categoryIndex) => (
+                                                                        <Accordion.Item
+                                                                            key={categoryIndex}
+                                                                            className="accordion-card-itm"
+                                                                            eventKey={categoryIndex.toString()}
+                                                                        >
+                                                                            <Accordion.Header className="heading-accordian-wp">
+                                                                                {category.MasterCategory}
+                                                                            </Accordion.Header>
+                                                                            <Accordion.Body className="p-0">
+                                                                                {/* If category has subcategories */}
+                                                                                {category.SubCategory ? (
+                                                                                    <Accordion>
+                                                                                        <Accordion.Item
+                                                                                            className="item-accordian-lst"
+                                                                                            eventKey="0"
+                                                                                        >
+                                                                                            <Accordion.Header>{category.SubCategory}</Accordion.Header>
+                                                                                            <Accordion.Body className="p-0">
+                                                                                                <Table responsive className="table-more-asts">
+                                                                                                    <thead className="thead-itms-wp space-table-head">
+                                                                                                        <tr>
+                                                                                                            <th>Item Name</th>
+                                                                                                            <th>Quantity <span className="small-th-head">(Requested)</span></th>
+                                                                                                            <th>Supplied By</th>
+                                                                                                        </tr>
+                                                                                                    </thead>
+                                                                                                    <tbody>
+                                                                                                        {category.Items.map((item, itemIndex) => (
+                                                                                                            <tr key={itemIndex}>
+                                                                                                                <td>
+                                                                                                                    <div className="itm-content-parg">
+                                                                                                                        <p className="txtweb-content">{item.ItemName}</p>
+                                                                                                                    </div>
+                                                                                                                </td>
+                                                                                                                <td>
+                                                                                                                    <div className="form-group-col">
+                                                                                                                        <Form.Control
+                                                                                                                            type="number"
+                                                                                                                            onChange={(e) => handleItemsInputChange(
+                                                                                                                                categoryIndex,
+                                                                                                                                itemIndex,
+                                                                                                                                'Quantity',
+                                                                                                                                e.target.value
+                                                                                                                            )}
+                                                                                                                            className="input-tb-txt"
+                                                                                                                            name='quantity'
+                                                                                                                            min={0}
+                                                                                                                            value={item.Quantity || ''}
+                                                                                                                            placeholder=""
+                                                                                                                        />
+                                                                                                                    </div>
+                                                                                                                </td>
+                                                                                                                <td>
+                                                                                                                    <div className="form-group-col">
+
+                                                                                                                        <Select
+                                                                                                                            classNamePrefix="react-select"
+                                                                                                                            options={basinsOptions}
+                                                                                                                            defaultInputValue={item.SuppliedBy || ''}
+                                                                                                                            onChange={(value) => handleItemsInputChange(
+                                                                                                                                categoryIndex,
+                                                                                                                                itemIndex,
+                                                                                                                                'SuppliedBy',
+                                                                                                                                value
+                                                                                                                            )}
+                                                                                                                            placeholder="Select"
+                                                                                                                            isSearchable={true}
+                                                                                                                            menuPortalTarget={document.body}
+                                                                                                                            menuPosition="fixed"
+                                                                                                                            styles={{
+                                                                                                                                control: (base) => ({
+                                                                                                                                    ...base,
+                                                                                                                                    borderRadius: "8px",
+                                                                                                                                    borderColor: "#ccc",
+                                                                                                                                    minHeight: "38px",
+                                                                                                                                }),
+                                                                                                                                menu: (base) => ({
+                                                                                                                                    ...base,
+                                                                                                                                    zIndex: 9999,
+                                                                                                                                }),
+                                                                                                                            }}
+                                                                                                                        />
+                                                                                                                    </div>
+                                                                                                                </td>
+                                                                                                            </tr>
+                                                                                                        ))}
+                                                                                                    </tbody>
+                                                                                                </Table>
+                                                                                            </Accordion.Body>
+                                                                                        </Accordion.Item>
+                                                                                    </Accordion>
+                                                                                ) : (
+                                                                                    // If no subcategories, render items directly in a table
+                                                                                    <Table responsive className="table-more-asts">
+                                                                                        <thead className="thead-itms-wp space-table-head">
+                                                                                            <tr>
+                                                                                                <th>Item Name</th>
+                                                                                                <th>Quantity <span className="small-th-head">(Requested)</span></th>
+                                                                                                <th>Supplied By</th>
+                                                                                            </tr>
+                                                                                        </thead>
+                                                                                        <tbody>
+                                                                                            {category.Items.map((item, itemIndex) => (
+                                                                                                <tr key={itemIndex}>
+                                                                                                    <td>
+                                                                                                        <div className="itm-content-parg">
+                                                                                                            <p className="txtweb-content">{item.ItemName}</p>
+                                                                                                        </div>
+                                                                                                    </td>
+                                                                                                    <td>
+                                                                                                        <div className="form-group-col">
+                                                                                                            <Form.Control
+                                                                                                                type="number"
+                                                                                                                min={0}
+                                                                                                                onChange={(e) => handleItemsInputChange(
+                                                                                                                    categoryIndex,
+                                                                                                                    itemIndex,
+                                                                                                                    'Quantity',
+                                                                                                                    e.target.value
+                                                                                                                )}
+                                                                                                                className="input-tb-txt"
+                                                                                                                name='quantity'
+                                                                                                                value={item.Quantity || ''}
+                                                                                                                placeholder=""
+                                                                                                            />
+                                                                                                        </div>
+                                                                                                    </td>
+                                                                                                    <td>
+
+                                                                                                        <Select
+                                                                                                            classNamePrefix="react-select"
+                                                                                                            options={basinsOptions}
+                                                                                                            defaultInputValue={item.SuppliedBy || ''}
+                                                                                                            onChange={(value) => handleItemsInputChange(
+                                                                                                                categoryIndex,
+                                                                                                                itemIndex,
+                                                                                                                'SuppliedBy',
+                                                                                                                value
+                                                                                                            )} placeholder="Select"
+                                                                                                            isSearchable={true}
+                                                                                                            menuPortalTarget={document.body}
+                                                                                                            menuPosition="fixed"
+                                                                                                            styles={{
+                                                                                                                control: (base) => ({
+                                                                                                                    ...base,
+                                                                                                                    borderRadius: "8px",
+                                                                                                                    borderColor: "#ccc",
+                                                                                                                    minHeight: "38px",
+                                                                                                                }),
+                                                                                                                menu: (base) => ({
+                                                                                                                    ...base,
+                                                                                                                    zIndex: 9999,
+                                                                                                                }),
+                                                                                                            }}
+                                                                                                        />
+
+                                                                                                    </td>
                                                                                                 </tr>
-                                                                                            </thead>
-                                                                                            <tbody>
-                                                                                                {
-                                                                                                    items.map((val, index) => {
-                                                                                                        return (
-                                                                                                            <>
-                                                                                                                <tr>
-                                                                                                                    <td>
-                                                                                                                        <div className="itm-content-parg">
-                                                                                                                            <p className="txtweb-content">Camlock A, AL-6061, 1.000"-PLG x 1.000"-FNPT</p>
-                                                                                                                        </div>
-                                                                                                                    </td>
-                                                                                                                    <td>
-                                                                                                                        <div className="form-group-col">
-                                                                                                                            <Form.Control type="number" onChange={(e) => handleInputChange('item', e, index)} className="input-tb-txt" name='quantity' value={items.quantity} placeholder="" />
-                                                                                                                        </div>
-                                                                                                                    </td>
-                                                                                                                    <td>
-                                                                                                                        <div className="form-group-col">
-                                                                                                                            <Form.Control type="text" onChange={(e) => handleInputChange('item', e, index)} className="input-tb-txt" name='suppliedBy' value={items.suppliedBy} placeholder="" />
-                                                                                                                        </div>
-                                                                                                                    </td>
-                                                                                                                </tr>
-                                                                                                            </>
-                                                                                                        )
-                                                                                                    })
-                                                                                                }
-
-
-                                                                                            </tbody>
-                                                                                        </Table>
-                                                                                    </Accordion.Body>
-                                                                                </Accordion.Item>
-                                                                                <Accordion.Item className="item-accordian-lst" eventKey="1">
-                                                                                    <Accordion.Header>Couplings</Accordion.Header>
-                                                                                    <Accordion.Body className="p-0">
-                                                                                        <Table responsive className="table-more-asts">
-                                                                                            <thead className="thead-itms-wp space-table-head">
-                                                                                                <tr>
-                                                                                                    <th>Item Name</th>
-                                                                                                    <th>Quantity <span className="small-th-head">(Requested)</span></th>
-                                                                                                    <th>Supplied By</th>
-                                                                                                </tr>
-                                                                                            </thead>
-                                                                                            <tbody>
-                                                                                                {
-                                                                                                    items.map((val, index) => {
-                                                                                                        return (
-                                                                                                            <>
-                                                                                                                <tr>
-                                                                                                                    <td>
-                                                                                                                        <div className="itm-content-parg">
-                                                                                                                            <p className="txtweb-content">Camlock A, AL-6061, 1.000"-PLG x 1.000"-FNPT</p>
-                                                                                                                        </div>
-                                                                                                                    </td>
-                                                                                                                    <td>
-                                                                                                                        <div className="form-group-col">
-                                                                                                                            <Form.Control type="number" onChange={(e) => handleInputChange('item', e, index)} className="input-tb-txt" name='quantity' value={items.quantity} placeholder="" />
-                                                                                                                        </div>
-                                                                                                                    </td>
-                                                                                                                    <td>
-                                                                                                                        <div className="form-group-col">
-                                                                                                                            <Form.Control type="text" onChange={(e) => handleInputChange('item', e, index)} className="input-tb-txt" name='suppliedBy' value={items.suppliedBy} placeholder="" />
-                                                                                                                        </div>
-                                                                                                                    </td>
-                                                                                                                </tr>
-                                                                                                            </>
-                                                                                                        )
-                                                                                                    })
-                                                                                                }
-
-                                                                                            </tbody>
-                                                                                        </Table>
-                                                                                    </Accordion.Body>
-                                                                                </Accordion.Item>
-                                                                                <Accordion.Item className="item-accordian-lst" eventKey="2">
-                                                                                    <Accordion.Header>Elbows</Accordion.Header>
-                                                                                    <Accordion.Body className="p-0">
-                                                                                        <Table responsive className="table-more-asts">
-                                                                                            <thead className="thead-itms-wp space-table-head">
-                                                                                                <tr>
-                                                                                                    <th>Item Name</th>
-                                                                                                    <th>Quantity <span className="small-th-head">(Requested)</span></th>
-                                                                                                    <th>Supplied By</th>
-                                                                                                </tr>
-                                                                                            </thead>
-                                                                                            <tbody>
-                                                                                                {
-                                                                                                    items.map((val, index) => {
-                                                                                                        return (
-                                                                                                            <>
-                                                                                                                <tr>
-                                                                                                                    <td>
-                                                                                                                        <div className="itm-content-parg">
-                                                                                                                            <p className="txtweb-content">Camlock A, AL-6061, 1.000"-PLG x 1.000"-FNPT</p>
-                                                                                                                        </div>
-                                                                                                                    </td>
-                                                                                                                    <td>
-                                                                                                                        <div className="form-group-col">
-                                                                                                                            <Form.Control type="number" onChange={(e) => handleInputChange('item', e, index)} className="input-tb-txt" name='quantity' value={items.quantity} placeholder="" />
-                                                                                                                        </div>
-                                                                                                                    </td>
-                                                                                                                    <td>
-                                                                                                                        <div className="form-group-col">
-                                                                                                                            <Form.Control type="text" onChange={(e) => handleInputChange('item', e, index)} className="input-tb-txt" name='suppliedBy' value={items.suppliedBy} placeholder="" />
-                                                                                                                        </div>
-                                                                                                                    </td>
-                                                                                                                </tr>
-                                                                                                            </>
-                                                                                                        )
-                                                                                                    })
-                                                                                                }
-
-                                                                                            </tbody>
-                                                                                        </Table>
-                                                                                    </Accordion.Body>
-                                                                                </Accordion.Item>
-                                                                                <Accordion.Item className="item-accordian-lst" eventKey="3">
-                                                                                    <Accordion.Header>Flanges</Accordion.Header>
-                                                                                    <Accordion.Body className="p-0">
-                                                                                        <Table responsive className="table-more-asts">
-                                                                                            <thead className="thead-itms-wp space-table-head">
-                                                                                                <tr>
-                                                                                                    <th>Item Name</th>
-                                                                                                    <th>Quantity <span className="small-th-head">(Requested)</span></th>
-                                                                                                    <th>Supplied By</th>
-                                                                                                </tr>
-                                                                                            </thead>
-                                                                                            <tbody>
-                                                                                                {
-                                                                                                    items.map((val, index) => {
-                                                                                                        return (
-                                                                                                            <>
-                                                                                                                <tr>
-                                                                                                                    <td>
-                                                                                                                        <div className="itm-content-parg">
-                                                                                                                            <p className="txtweb-content">Camlock A, AL-6061, 1.000"-PLG x 1.000"-FNPT</p>
-                                                                                                                        </div>
-                                                                                                                    </td>
-                                                                                                                    <td>
-                                                                                                                        <div className="form-group-col">
-                                                                                                                            <Form.Control type="number" onChange={(e) => handleInputChange('item', e, index)} className="input-tb-txt" name='quantity' value={items.quantity} placeholder="" />
-                                                                                                                        </div>
-                                                                                                                    </td>
-                                                                                                                    <td>
-                                                                                                                        <div className="form-group-col">
-                                                                                                                            <Form.Control type="text" onChange={(e) => handleInputChange('item', e, index)} className="input-tb-txt" name='suppliedBy' value={items.suppliedBy} placeholder="" />
-                                                                                                                        </div>
-                                                                                                                    </td>
-                                                                                                                </tr>
-                                                                                                            </>
-                                                                                                        )
-                                                                                                    })
-                                                                                                }
-
-                                                                                            </tbody>
-                                                                                        </Table>
-                                                                                    </Accordion.Body>
-                                                                                </Accordion.Item>
-                                                                                <Accordion.Item className="item-accordian-lst" eventKey="4">
-                                                                                    <Accordion.Header>Hammer Union Fittings</Accordion.Header>
-                                                                                    <Accordion.Body className="p-0">
-                                                                                        <Table responsive className="table-more-asts">
-                                                                                            <thead className="thead-itms-wp space-table-head">
-                                                                                                <tr>
-                                                                                                    <th>Item Name</th>
-                                                                                                    <th>Quantity <span className="small-th-head">(Requested)</span></th>
-                                                                                                    <th>Supplied By</th>
-                                                                                                </tr>
-                                                                                            </thead>
-                                                                                            <tbody>
-                                                                                                {
-                                                                                                    items.map((val, index) => {
-                                                                                                        return (
-                                                                                                            <>
-                                                                                                                <tr>
-                                                                                                                    <td>
-                                                                                                                        <div className="itm-content-parg">
-                                                                                                                            <p className="txtweb-content">Camlock A, AL-6061, 1.000"-PLG x 1.000"-FNPT</p>
-                                                                                                                        </div>
-                                                                                                                    </td>
-                                                                                                                    <td>
-                                                                                                                        <div className="form-group-col">
-                                                                                                                            <Form.Control type="number" onChange={(e) => handleInputChange('item', e, index)} className="input-tb-txt" name='quantity' value={items.quantity} placeholder="" />
-                                                                                                                        </div>
-                                                                                                                    </td>
-                                                                                                                    <td>
-                                                                                                                        <div className="form-group-col">
-                                                                                                                            <Form.Control type="text" onChange={(e) => handleInputChange('item', e, index)} className="input-tb-txt" name='suppliedBy' value={items.suppliedBy} placeholder="" />
-                                                                                                                        </div>
-                                                                                                                    </td>
-                                                                                                                </tr>
-                                                                                                            </>
-                                                                                                        )
-                                                                                                    })
-                                                                                                }
-
-                                                                                            </tbody>
-                                                                                        </Table>
-                                                                                    </Accordion.Body>
-                                                                                </Accordion.Item>
-                                                                                <Accordion.Item className="item-accordian-lst" eventKey="5">
-                                                                                    <Accordion.Header>Nipples</Accordion.Header>
-                                                                                    <Accordion.Body className="p-0">
-                                                                                        <Table responsive className="table-more-asts">
-                                                                                            <thead className="thead-itms-wp space-table-head">
-                                                                                                <tr>
-                                                                                                    <th>Item Name</th>
-                                                                                                    <th>Quantity <span className="small-th-head">(Requested)</span></th>
-                                                                                                    <th>Supplied By</th>
-                                                                                                </tr>
-                                                                                            </thead>
-                                                                                            <tbody>
-                                                                                                {
-                                                                                                    items.map((val, index) => {
-                                                                                                        return (
-                                                                                                            <>
-                                                                                                                <tr>
-                                                                                                                    <td>
-                                                                                                                        <div className="itm-content-parg">
-                                                                                                                            <p className="txtweb-content">Camlock A, AL-6061, 1.000"-PLG x 1.000"-FNPT</p>
-                                                                                                                        </div>
-                                                                                                                    </td>
-                                                                                                                    <td>
-                                                                                                                        <div className="form-group-col">
-                                                                                                                            <Form.Control type="number" onChange={(e) => handleInputChange('item', e, index)} className="input-tb-txt" name='quantity' value={items.quantity} placeholder="" />
-                                                                                                                        </div>
-                                                                                                                    </td>
-                                                                                                                    <td>
-                                                                                                                        <div className="form-group-col">
-                                                                                                                            <Form.Control type="text" onChange={(e) => handleInputChange('item', e, index)} className="input-tb-txt" name='suppliedBy' value={items.suppliedBy} placeholder="" />
-                                                                                                                        </div>
-                                                                                                                    </td>
-                                                                                                                </tr>
-                                                                                                            </>
-                                                                                                        )
-                                                                                                    })
-                                                                                                }
-
-                                                                                            </tbody>
-                                                                                        </Table>
-                                                                                    </Accordion.Body>
-                                                                                </Accordion.Item>
-                                                                                <Accordion.Item className="item-accordian-lst" eventKey="6">
-                                                                                    <Accordion.Header>Reducers & Bushings</Accordion.Header>
-                                                                                    <Accordion.Body className="p-0">
-                                                                                        <Table responsive className="table-more-asts">
-                                                                                            <thead className="thead-itms-wp space-table-head">
-                                                                                                <tr>
-                                                                                                    <th>Item Name</th>
-                                                                                                    <th>Quantity <span className="small-th-head">(Requested)</span></th>
-                                                                                                    <th>Supplied By</th>
-                                                                                                </tr>
-                                                                                            </thead>
-                                                                                            <tbody>
-                                                                                                {
-                                                                                                    items.map((val, index) => {
-                                                                                                        return (
-                                                                                                            <>
-                                                                                                                <tr>
-                                                                                                                    <td>
-                                                                                                                        <div className="itm-content-parg">
-                                                                                                                            <p className="txtweb-content">Camlock A, AL-6061, 1.000"-PLG x 1.000"-FNPT</p>
-                                                                                                                        </div>
-                                                                                                                    </td>
-                                                                                                                    <td>
-                                                                                                                        <div className="form-group-col">
-                                                                                                                            <Form.Control type="number" onChange={(e) => handleInputChange('item', e, index)} className="input-tb-txt" name='quantity' value={items.quantity} placeholder="" />
-                                                                                                                        </div>
-                                                                                                                    </td>
-                                                                                                                    <td>
-                                                                                                                        <div className="form-group-col">
-                                                                                                                            <Form.Control type="text" onChange={(e) => handleInputChange('item', e, index)} className="input-tb-txt" name='suppliedBy' value={items.suppliedBy} placeholder="" />
-                                                                                                                        </div>
-                                                                                                                    </td>
-                                                                                                                </tr>
-                                                                                                            </>
-                                                                                                        )
-                                                                                                    })
-                                                                                                }
-
-                                                                                            </tbody>
-                                                                                        </Table>
-                                                                                    </Accordion.Body>
-                                                                                </Accordion.Item>
-                                                                                <Accordion.Item className="item-accordian-lst" eventKey="7">
-                                                                                    <Accordion.Header>Tees</Accordion.Header>
-                                                                                    <Accordion.Body className="p-0">
-                                                                                        <Table responsive className="table-more-asts">
-                                                                                            <thead className="thead-itms-wp space-table-head">
-                                                                                                <tr>
-                                                                                                    <th>Item Name</th>
-                                                                                                    <th>Quantity <span className="small-th-head">(Requested)</span></th>
-                                                                                                    <th>Supplied By</th>
-                                                                                                </tr>
-                                                                                            </thead>
-                                                                                            <tbody>
-                                                                                                {
-                                                                                                    items.map((val, index) => {
-                                                                                                        return (
-                                                                                                            <>
-                                                                                                                <tr>
-                                                                                                                    <td>
-                                                                                                                        <div className="itm-content-parg">
-                                                                                                                            <p className="txtweb-content">Camlock A, AL-6061, 1.000"-PLG x 1.000"-FNPT</p>
-                                                                                                                        </div>
-                                                                                                                    </td>
-                                                                                                                    <td>
-                                                                                                                        <div className="form-group-col">
-                                                                                                                            <Form.Control type="number" onChange={(e) => handleInputChange('item', e, index)} className="input-tb-txt" name='quantity' value={items.quantity} placeholder="" />
-                                                                                                                        </div>
-                                                                                                                    </td>
-                                                                                                                    <td>
-                                                                                                                        <div className="form-group-col">
-                                                                                                                            <Form.Control type="text" onChange={(e) => handleInputChange('item', e, index)} className="input-tb-txt" name='suppliedBy' value={items.suppliedBy} placeholder="" />
-                                                                                                                        </div>
-                                                                                                                    </td>
-                                                                                                                </tr>
-                                                                                                            </>
-                                                                                                        )
-                                                                                                    })
-                                                                                                }
-
-                                                                                            </tbody>
-                                                                                        </Table>
-                                                                                    </Accordion.Body>
-                                                                                </Accordion.Item>
-                                                                            </Accordion>
-                                                                        </Accordion.Body>
-                                                                    </Accordion.Item>
-                                                                    <Accordion.Item className="accordion-card-itm">
-                                                                        <Accordion.Header className="heading-accordian-wp">Pressure Washer</Accordion.Header>
-                                                                        <Accordion.Body className="p-0">
-                                                                            Pressure Washer
-                                                                        </Accordion.Body>
-                                                                    </Accordion.Item>
-                                                                    <Accordion.Item className="accordion-card-itm">
-                                                                        <Accordion.Header className="heading-accordian-wp">Tools</Accordion.Header>
-                                                                        <Accordion.Body className="p-0">
-                                                                            Tools
-                                                                        </Accordion.Body>
-                                                                    </Accordion.Item>
-                                                                    <Accordion.Item className="accordion-card-itm">
-                                                                        <Accordion.Header className="heading-accordian-wp">Miscellaneous</Accordion.Header>
-                                                                        <Accordion.Body className="p-0">
-                                                                            Miscellaneous
-                                                                        </Accordion.Body>
-                                                                    </Accordion.Item>
+                                                                                            ))}
+                                                                                        </tbody>
+                                                                                    </Table>
+                                                                                )}
+                                                                            </Accordion.Body>
+                                                                        </Accordion.Item>
+                                                                    ))}
                                                                 </Accordion>
                                                             </div>
-
 
 
 
@@ -1730,6 +1649,7 @@ function Home() {
                                                                                 <td>
                                                                                     <Form.Control
                                                                                         type="number"
+                                                                                        min={0}
                                                                                         name="quantity"
                                                                                         value={val.quantity}
                                                                                         onChange={(e) => handleInputChange("custom", e, index)}
@@ -1739,7 +1659,7 @@ function Home() {
                                                                                     <Select
                                                                                         classNamePrefix="react-select"
                                                                                         options={basinsOptions}
-                                                                                        value={val.suppliedBy}
+                                                                                        defaultInputValue={val.suppliedBy}
                                                                                         onChange={(selectedOption) => handleSelectChange('custom', selectedOption, index, 'suppliedBy')}
                                                                                         placeholder="Select"
                                                                                         isSearchable={true}
@@ -1802,27 +1722,33 @@ function Home() {
                                                                                     <td>
                                                                                         <div className="quanty-web-mts">
                                                                                             <Form.Control
+                                                                                                name="quantity"
                                                                                                 type="number"
+                                                                                                min={0}
                                                                                                 className="input-tb-txt"
                                                                                                 value={item.quantity || ""}
-                                                                                                onChange={(e) =>
-                                                                                                    setLabItems((prev) =>
-                                                                                                        prev.map((itm, i) =>
-                                                                                                            i === index
-                                                                                                                ? { ...itm, quantity: Number(e.target.value) || null }
-                                                                                                                : itm
-                                                                                                        )
-                                                                                                    )
-                                                                                                }
+                                                                                                onChange={(e) => handleInputChange("lap", e, index)}
+
+                                                                                            // onChange={(e) =>
+                                                                                            //     setLabItems((prev) =>
+                                                                                            //         prev.map((itm, i) =>
+                                                                                            //             i === index
+                                                                                            //                 ? { ...itm, quantity: Number(e.target.value) || null }
+                                                                                            //                 : itm
+                                                                                            //         )
+                                                                                            //     )
+                                                                                            // }
                                                                                             />
                                                                                         </div>
                                                                                     </td>
                                                                                     <td>
                                                                                         <Select
+                                                                                            onChange={(val) => handleSelectChange("lapSelect", val, index, 'suppliedBy')}
+                                                                                            defaultInputValue={item.suppliedBy}
                                                                                             classNamePrefix="react-select"
                                                                                             options={basinsOptions}
-                                                                                            value={item.suppliedBy}
-                                                                                            onChange={(selectedOption) => handleSelectChange('lap', selectedOption, index, 'suppliedBy')}
+                                                                                            // value={item.suppliedBy}
+                                                                                            //  onChange={(selectedOption) => handleSelectChange('lap', selectedOption, index, 'suppliedBy')}
                                                                                             placeholder="Select"
                                                                                             isSearchable={true}
                                                                                             menuPortalTarget={document.body}
@@ -1847,7 +1773,9 @@ function Home() {
                                                                     </Table>
                                                                     <div className="total-qty-footer">
                                                                         <div className="total-ft-wth">
-                                                                            <span class="txt-label-ttl">Total QTY <span className="d-inline-block ms-3"></span>5</span>
+                                                                            <span class="txt-label-ttl">Total QTY <span className="d-inline-block ms-3"></span>{
+                                                                                labItems.reduce((sum, e) => sum + Number(e.quantity), 0)
+                                                                            }</span>
                                                                         </div>
                                                                     </div>
                                                                 </>
@@ -1876,6 +1804,7 @@ function Home() {
                                                                                                     type="number"
                                                                                                     className="input-tb-txt"
                                                                                                     name="quantity"
+                                                                                                    min={0}
                                                                                                     value={val.quantity || ""}
                                                                                                     onChange={(e) => handleInputChange("hse", e, index)}
                                                                                                     placeholder=""
@@ -1899,7 +1828,7 @@ function Home() {
                                                                                                 <Select
                                                                                                     classNamePrefix="react-select"
                                                                                                     options={basinsOptions}
-                                                                                                    value={val.suppliedBy}
+                                                                                                    defaultInputValue={val.suppliedBy}
                                                                                                     onChange={(selectedOption) => handleSelectChange('hse', selectedOption, index, 'suppliedBy')}
                                                                                                     placeholder="Select"
                                                                                                     isSearchable={true}
@@ -1957,7 +1886,7 @@ function Home() {
                                                                                     </td>
                                                                                     <td>
                                                                                         <div className="form-group-col">
-                                                                                            <Form.Control type="number" className="input-tb-txt" placeholder="" />
+                                                                                            <Form.Control type="number"  min={0} className="input-tb-txt" placeholder="" />
                                                                                         </div>
                                                                                     </td>
                                                                                     <td>
@@ -1975,7 +1904,7 @@ function Home() {
                                                                                     </td>
                                                                                     <td>
                                                                                         <div className="form-group-col">
-                                                                                            <Form.Control type="number" className="input-tb-txt" placeholder="" />
+                                                                                            <Form.Control type="number"  min={0} className="input-tb-txt" placeholder="" />
                                                                                         </div>
                                                                                     </td>
                                                                                     <td>
@@ -1993,7 +1922,7 @@ function Home() {
                                                                                     </td>
                                                                                     <td>
                                                                                         <div className="form-group-col">
-                                                                                            <Form.Control type="number" className="input-tb-txt" placeholder="" />
+                                                                                            <Form.Control type="number"  min={0} className="input-tb-txt" placeholder="" />
                                                                                         </div>
                                                                                     </td>
                                                                                     <td>
@@ -2011,7 +1940,7 @@ function Home() {
                                                                                     </td>
                                                                                     <td>
                                                                                         <div className="form-group-col">
-                                                                                            <Form.Control type="number" className="input-tb-txt" placeholder="" />
+                                                                                            <Form.Control type="number"  min={0} className="input-tb-txt" placeholder="" />
                                                                                         </div>
                                                                                     </td>
                                                                                     <td>
@@ -2029,7 +1958,7 @@ function Home() {
                                                                                     </td>
                                                                                     <td>
                                                                                         <div className="form-group-col">
-                                                                                            <Form.Control type="number" className="input-tb-txt" placeholder="" />
+                                                                                            <Form.Control type="number"  min={0} className="input-tb-txt" placeholder="" />
                                                                                         </div>
                                                                                     </td>
                                                                                     <td>
@@ -2047,7 +1976,7 @@ function Home() {
                                                                                     </td>
                                                                                     <td>
                                                                                         <div className="form-group-col">
-                                                                                            <Form.Control type="number" className="input-tb-txt" placeholder="" />
+                                                                                            <Form.Control type="number"  min={0} className="input-tb-txt" placeholder="" />
                                                                                         </div>
                                                                                     </td>
                                                                                     <td>
@@ -2065,7 +1994,7 @@ function Home() {
                                                                                     </td>
                                                                                     <td>
                                                                                         <div className="form-group-col">
-                                                                                            <Form.Control type="number" className="input-tb-txt" placeholder="" />
+                                                                                            <Form.Control type="number"  min={0} className="input-tb-txt" placeholder="" />
                                                                                         </div>
                                                                                     </td>
                                                                                     <td>
@@ -2083,7 +2012,7 @@ function Home() {
                                                                                     </td>
                                                                                     <td>
                                                                                         <div className="form-group-col">
-                                                                                            <Form.Control type="number" className="input-tb-txt" placeholder="" />
+                                                                                            <Form.Control type="number"  min={0} className="input-tb-txt" placeholder="" />
                                                                                         </div>
                                                                                     </td>
                                                                                     <td>
@@ -2101,7 +2030,7 @@ function Home() {
                                                                                     </td>
                                                                                     <td>
                                                                                         <div className="form-group-col">
-                                                                                            <Form.Control type="number" className="input-tb-txt" placeholder="" />
+                                                                                            <Form.Control type="number"  min={0} className="input-tb-txt" placeholder="" />
                                                                                         </div>
                                                                                     </td>
                                                                                     <td>
@@ -2119,7 +2048,7 @@ function Home() {
                                                                                     </td>
                                                                                     <td>
                                                                                         <div className="form-group-col">
-                                                                                            <Form.Control type="number" className="input-tb-txt" placeholder="" />
+                                                                                            <Form.Control type="number"  min={0} className="input-tb-txt" placeholder="" />
                                                                                         </div>
                                                                                     </td>
                                                                                     <td>
