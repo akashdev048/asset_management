@@ -29,6 +29,8 @@ function Login() {
         try {
             const parsedUrl = new URL(url);
             const accessToken = new URLSearchParams(parsedUrl.search).get('access_token');
+            const dealId = new URLSearchParams(parsedUrl.search).get('deal_id');
+            localStorage.setItem('deal_id', dealId)
             return accessToken;
         } catch (error) {
             console.error('Invalid URL:', error);
@@ -61,7 +63,7 @@ function Login() {
         // navigate('/home')
         // return
         e.preventDefault()
-        let url = window.location.href.includes("prod") ? process.env.REACT_APP_PROD_SSO_REDIRECTION_URL :  window.location.href.includes("local") ?  process.env.REACT_APP__LOCAL__SSO_REDIRECTION_URL  : process.env.REACT_APP_SSO_REDIRECTION_URL
+        let url = window.location.href.includes("prod") ? process.env.REACT_APP_PROD_SSO_REDIRECTION_URL : window.location.href.includes("local") ? process.env.REACT_APP__LOCAL__SSO_REDIRECTION_URL : process.env.REACT_APP_SSO_REDIRECTION_URL
         window.location.href = url;
     }
     return (
